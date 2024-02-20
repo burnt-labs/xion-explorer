@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { suggestChain } from '@leapwallet/cosmos-snap-provider';
 import { useDashboard, type ChainConfig, useBlockchain, NetworkType } from '@/stores';
 import { CosmosRestClient } from '@/libs/client';
 import { onMounted } from 'vue';
@@ -38,7 +37,7 @@ async function initParamsForKeplr() {
     const chain = selected.value
     if(!chain.endpoints?.rest?.at(0)) throw new Error("Endpoint does not set");
     const client = CosmosRestClient.newDefault(chain.endpoints.rest?.at(0)?.address || "")
-    const b = await client.getBaseBlockLatest()   
+    const b = await client.getBaseBlockLatest()
     const chainid = b.block.header.chain_id
 
     const gasPriceStep = chain.keplrPriceStep || {
@@ -98,7 +97,7 @@ async function initSnap() {
 
     if(!chain.endpoints?.rest?.at(0)) throw new Error("Endpoint does not set");
     const client = CosmosRestClient.newDefault(chain.endpoints.rest?.at(0)?.address || "")
-    const b = await client.getBaseBlockLatest()   
+    const b = await client.getBaseBlockLatest()
     const chainId = b.block.header.chain_id
 
     conf.value = JSON.stringify({
@@ -136,7 +135,7 @@ function suggest() {
             })
         }
     } else {
-        suggestChain(JSON.parse(conf.value));
+        console.log("suggest")
     }
 }
 
