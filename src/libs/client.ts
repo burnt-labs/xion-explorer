@@ -93,7 +93,6 @@ export class CosmosRestClient extends BaseRestClient<RequestRegistry> {
   }
   async getBankSupplyByDenom(denom: string) {
     let supply = await this.request(this.registry.bank_supply_by_denom, { denom });
-    console.log(supply)
     return supply
   }
   // Distribution Module
