@@ -1,6 +1,7 @@
 {
   "chain_name": "xion-testnet-1",
   "coingecko": "XION",
+  "network_type": "testnet",
   "rpc": [
     {
       "address": "https://rpc.xion-testnet-1.burnt.com",
@@ -19,7 +20,7 @@
       "provider": "ITRocket"
     }
   ],
-  "rest": [
+  "api": [
     {
       "address": "https://api.xion-testnet-1.burnt.com",
       "provider": "🔥BurntLabs🔥"
@@ -38,10 +39,11 @@
     }
   ],
   "snapshot_provider": "",
-  "sdk_version": "0.50.10",
+  "sdk_version": "0.50.11",
   "coin_type": "118",
   "min_tx_fee": "800",
   "addr_prefix": "xion",
+  "theme_color": "#161723",
   "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/xion/images/burnt-round.png",
   "assets": [
     {
