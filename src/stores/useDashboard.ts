@@ -269,8 +269,8 @@ export enum NetworkType {
   Testnet,
 }
 export enum ConfigSource {
-  MainnetCosmosDirectory = 'https://assets.xion.burnt.com/pingpub/xion-mainnet-1.json',
-  TestnetCosmosDirectory = 'https://assets.xion.burnt.com/pingpub/xion-testnet-1.json',
+  MainnetCosmosDirectory = 'https://chains.cosmos.directory',
+  TestnetCosmosDirectory = 'https://chains.testcosmos.directory',
   Local = 'local',
 }
 
@@ -280,16 +280,10 @@ export const useDashboard = defineStore('dashboard', {
       localStorage.getItem('favoriteMap') ||
       '{"xion-mainnet-1":true, "xion-testnet-1":true}'
     );
-    let source: string = ConfigSource.MainnetCosmosDirectory;
-    let networkType = NetworkType.Mainnet;
-    if (window.location.hostname.search('testnet') > -1) {
-      source = ConfigSource.TestnetCosmosDirectory;
-      networkType = NetworkType.Testnet;
-    }
     return {
       status: LoadingStatus.Empty,
-      source: source,
-      networkType: networkType,
+      source: ConfigSource.MainnetCosmosDirectory,
+      networkType: NetworkType.Mainnet,
       favoriteMap: favMap as Record<string, boolean>,
       chains: {} as Record<string, ChainConfig>,
       prices: {} as Record<string, any>,
