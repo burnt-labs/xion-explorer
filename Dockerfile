@@ -1,35 +1,30 @@
-# Stage 1: Build the application
-FROM node:18-alpine AS builder
+# ---- Base Node ----
+FROM node:lts AS build
 
-# Set the working directory
+ARG VITE_DEPLOYMENT_ENV
+
 WORKDIR /app
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock /app/
 
-# Install dependencies
-RUN yarn install
+RUN set -eux \
+  && yarn install
 
-# Copy the rest of the application code
 COPY . .
+RUN set -eux \
+  && yarn build:${VITE_DEPLOYMENT_ENV}
 
-# Build the application
-RUN yarn build
+FROM node:lts AS runner
 
-# Stage 2: Serve the application
-FROM node:18-alpine AS server
+COPY --from=build /app/dist /app
 
-# Install 'serve' globally
-RUN yarn global add serve
+RUN set -eux \
+  && npm install -g wrangler@latest \
+  && groupadd -g 1001 burnt \
+  && useradd -u 1001 -g 1001 burnt \
+  && chown -R burnt:burnt /app
 
-# Copy the built files from the builder stage
-COPY --from=builder /app/dist /app/dist
+WORKDIR /app
+USER burnt
 
-# Set the working directory
-WORKDIR /app/dist
-
-# Expose port 3000
-EXPOSE 3000
-
-# Serve the application
-CMD ["serve", "-s", ".", "-l", "3000"]
+CMD [ "wrangler", "pages", "dev", "./", "--compatibility-flags", "nodejs_compat", "--show-interactive-dev-session", "false", "--ip", "0.0.0.0", "--port", "3000" ]
