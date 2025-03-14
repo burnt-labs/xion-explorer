@@ -27,4 +27,6 @@ RUN set -eux \
 WORKDIR /app
 USER burnt
 
+EXPOSE 3000
+
 CMD [ "wrangler", "pages", "dev", "./", "--compatibility-flags", "nodejs_compat", "--show-interactive-dev-session", "false", "--ip", "0.0.0.0", "--port", "3000" ]
