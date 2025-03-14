@@ -278,7 +278,7 @@ export const useDashboard = defineStore('dashboard', {
   state: () => {
     const favMap = JSON.parse(
       localStorage.getItem('favoriteMap') ||
-      '{"xion-mainnet-1":true, "xion-testnet-1":true}'
+      '{"xion-mainnet-1":true, "xion-testnet-1":true, "xion-testnet-2":true}'
     );
     return {
       status: LoadingStatus.Empty,

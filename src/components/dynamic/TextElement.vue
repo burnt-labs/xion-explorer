@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import {isBech32Address} from '@/libs/utils';
-import {useBlockchain, useFormatter} from '@/stores';
+import { isBech32Address } from '@/libs/utils';
+import { useBlockchain, useFormatter } from '@/stores';
 import MdEditor from 'md-editor-v3';
-import {computed, onMounted, ref} from 'vue';
-import {fromBase64, toHex} from '@cosmjs/encoding';
+import { computed, onMounted, ref } from 'vue';
+//import nameMatcha from '@leapwallet/name-matcha'
+import { fromBase64, toHex } from '@cosmjs/encoding';
 
 const chainStore = useBlockchain()
 const props = defineProps(['value']);
 const format = useFormatter();
-
 function isMD() {
   if (
-      props.value &&
-      (String(props.value).indexOf('\n') > -1 || String(props.value).indexOf('\\n') > -1)
+    props.value &&
+    (String(props.value).indexOf('\n') > -1 || String(props.value).indexOf('\\n') > -1)
   ) {
     return true;
   }
@@ -30,7 +30,7 @@ const text = computed(() => {
     case v.length === 28 && v.endsWith("="): {
       return format.validator(v) || v
     }
-      // 2023-06-12T03:09:38.253756368Z
+    // 2023-06-12T03:09:38.253756368Z
     case v.search(/^[1-9]\d{3}-\d{1,2}-\d{1,2}T\d{1,2}:\d{2}:\d{2}[.\d]*Z$/g) > -1: {
       return new Date(v).toLocaleString(navigator.language)
     }
@@ -42,11 +42,11 @@ const text = computed(() => {
 
 const names = ref([] as { name?: string | null, provider?: string }[])
 
-onMounted(() => {
-  if (isAddress()) nameMatcha.lookupAll(props.value).then(re => {
-    names.value = Object.keys(re).map(key => ({ name: re[key], provider: key })).filter(x => x.name)
-  })
-})
+// onMounted(() => {
+//   if (isAddress()) nameMatcha.lookupAll(props.value).then(re => {
+//     names.value = Object.keys(re).map(key => ({ name: re[key], provider: key })).filter(x => x.name)
+//   })
+// })
 const toHexOutput = ref(false)
 const isConvertable = computed(() => {
   return String(props.value).endsWith('=') && props.value.length !== 28

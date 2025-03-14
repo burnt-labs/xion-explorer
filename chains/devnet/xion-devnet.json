@@ -4,13 +4,13 @@
   "network_type": "testnet",
   "rpc": [
     {
-      "address": "localhost:26657",
+      "address": "http://127.0.0.1:26657",
       "provider": "🔥BurntLabs🔥"
     }
   ],
   "api": [
     {
-      "address": "localhost:1317",
+      "address": "http://127.0.0.1:1317",
       "provider": "🔥BurntLabs🔥"
     }
   ],
