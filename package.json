@@ -11,9 +11,11 @@
     "build-only": "vite build --mode",
     "type-check": "vue-tsc --noEmit",
     "build:mainnet": "npm run build-only mainnet",
+    "build:devnet": "npm run build-only devnet",
     "build:testnet": "npm run build-only testnet",
     "build:testnet2": "npm run build-only testnet2",
     "deploy:mainnet": "npm run build:mainnet && npm run deploy mainnet",
+    "deploy:devnet": "npm run build:devnet && npm run deploy devnet",
     "deploy:testnet": "npm run build:testnet && npm run deploy testnet",
     "deploy:testnet2": "npm run build:testnet2 && npm run deploy testnet2"
   },

@@ -21,8 +21,8 @@ COPY --from=build /app/dist /app
 RUN set -eux \
   && npm install -g wrangler@latest \
   && groupadd -g 1001 burnt \
-  && useradd -u 1001 -g 1001 burnt \
-  && chown -R burnt:burnt /app
+  && useradd -u 1001 -g 1001 -m -d /home/burnt burnt \
+  && chown -R burnt:burnt /home/burnt /app
 
 WORKDIR /app
 USER burnt
