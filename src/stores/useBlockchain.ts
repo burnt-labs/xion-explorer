@@ -42,7 +42,10 @@ export const useBlockchain = defineStore('blockchain', {
   },
   getters: {
     current(): ChainConfig | undefined {
-      const chain = this.dashboard.chains[this.chainName]
+      const chainList = this.dashboard.chains;
+      const chainNames = Object.keys(chainList);
+      const defaultChain = chainNames.length > 0 ? chainNames[0] : '';
+      const chain = this.chainName ? chainList[this.chainName] : chainList[defaultChain];
       // update chain config with dynamic updated sdk version
       const sdkversion = localStorage.getItem(`sdk_version_${this.chainName}`)
       if(sdkversion && chain?.versions) {
@@ -73,7 +76,7 @@ export const useBlockchain = defineStore('blockchain', {
           const { color } = hexToRgb(this.current?.themeColor);
           const { h, s, l } = rgbToHsl(color);
           const themeColor = h + ' ' + s + '% ' + l +'%';
-          document.body.style.setProperty('--p', `${themeColor}`);
+          document.body.style.setProperty('--bc', `${themeColor}`);
           // document.body.style.setProperty('--p', `${this.current?.themeColor}`);
         } else {
           document.body.style.setProperty('--p', '237.65 100% 70%');
@@ -105,7 +108,7 @@ export const useBlockchain = defineStore('blockchain', {
       }
       // compute favorite menu
       const favNavItems: VerticalNavItems = [];
-      Object.keys(this.dashboard.favoriteMap).forEach((name) => {
+      Object.keys(this.dashboard.chains).forEach((name) => {
         const ch = this.dashboard.chains[name];
         if (ch && this.dashboard.favoriteMap?.[name]) {
           favNavItems.push({
@@ -119,6 +122,7 @@ export const useBlockchain = defineStore('blockchain', {
       // combine all together
       return [
         ...currNavItem,
+	/*
         { heading: 'Ecosystem' } as NavSectionTitle,
         {
           title: 'Favorite',
@@ -128,6 +132,7 @@ export const useBlockchain = defineStore('blockchain', {
           i18n: true,
           icon: { icon: 'mdi-star', size: '22' },
         } as NavGroup,
+        */
         {
           title: 'All Blockchains',
           to: { path: '/' },

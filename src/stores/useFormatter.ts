@@ -72,10 +72,15 @@ export const useFormatter = defineStore('formatter', {
       return trace;
     },
     async fetchDenomMetadata(denom: string) {
-      if(this.loading.includes(denom)) return 
+      if (this.loading.includes(denom)) return
       this.loading.push(denom)
-      const asset = await get(`https://metadata.ping.pub/metadata/${denom}`) as Asset
-      this.ibcMetadata[denom] = asset
+      const assets = this.blockchain.current?.assets
+      if (assets) {
+        const asset = assets.find(a => a.base.endsWith(denom))
+        if (asset) {
+          this.ibcMetadata[denom] = asset
+        }
+      }
     },
     priceInfo(denom: string) {
       const id = this.dashboard.coingecko[denom]?.coinId || "";

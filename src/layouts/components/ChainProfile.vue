@@ -32,11 +32,11 @@ function changeEndpoint(item: Endpoint) {
           "
           class="capitalize whitespace-nowrap text-base font-semibold text-gray-600 dark:text-gray-200 hidden md:!block"
         >
-          {{ 
+	<span :style="`color: ${chainStore.current?.themeColor}`">{{ 
             baseStore.latest?.block?.header?.height
               ? `#${baseStore.latest.block.header.height}`
               : chainStore.chainName  || '' 
-          }} <span class="text-error">{{ baseStore.connected ? '' : 'disconnected' }}</span>
+	 }}</span> <span class="text-error">{{ baseStore.connected ? '' : 'disconnected' }}</span>
         </div>
         <div
           class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap hidden md:!block"
@@ -58,7 +58,7 @@ function changeEndpoint(item: Endpoint) {
       </div>
       <div
         v-for="(item, index) in chainStore.current?.endpoints?.rest"
-        class="px-4 py-2 w-full hover:bg-gray-100 dark:hover:bg-[#384059] cursor-pointer"
+        class="px-4 py-2 w-full hover:bg-gray-100 dark:hover:bg-[#1a1a1a] cursor-pointer"
         :key="index"
         @click="changeEndpoint(item)"
       >
