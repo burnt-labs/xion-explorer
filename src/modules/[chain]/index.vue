@@ -154,7 +154,7 @@ const amount = computed({
             <div class="dropdown dropdown-hover w-full">
               <label>
                 <div
-                  class="bg-gray-100 dark:bg-black flex items-center justify-between px-4 py-2 cursor-pointer rounded">
+                  class="bg-gray-100 dark:bg-[#384059] flex items-center justify-between px-4 py-2 cursor-pointer rounded">
                   <div>
                     <div class="font-semibold text-xl text-[#666] dark:text-white">
                       {{ ticker?.market?.name || '' }}
@@ -178,7 +178,7 @@ const amount = computed({
               </label>
               <div class="dropdown-content pt-1">
                 <div class="h-64 overflow-auto w-full shadow rounded">
-                  <ul class="menu w-full bg-gray-100 rounded dark:bg-[#000000]">
+                  <ul class="menu w-full bg-gray-100 rounded dark:bg-[#384059]">
                     <li v-for="(item, index) in store.coinInfo.tickers" :key="index" @click="store.selectTicker(index)">
                       <div class="flex items-center justify-between hover:bg-base-100">
                         <div class="flex-1">
@@ -245,18 +245,16 @@ const amount = computed({
           <PriceMarketChart />
         </div>
       </div>
-      <!--
-      <div class="h-[1px] w-full bg-gray-100 dark:bg-black"></div>
+      <div class="h-[1px] w-full bg-gray-100 dark:bg-[#384059]"></div>
       <div class="max-h-[250px] overflow-auto p-4 text-sm">
         <MdEditor :model-value="coinInfo.description?.en" previewOnly></MdEditor>
       </div>
       <div class="mx-4 flex flex-wrap items-center">
         <div v-for="tag in coinInfo.categories"
-          class="mr-2 mb-4 text-xs bg-gray-100 dark:bg-black px-3 rounded-full py-1">
+          class="mr-2 mb-4 text-xs bg-gray-100 dark:bg-[#384059] px-3 rounded-full py-1">
           {{ tag }}
         </div>
       </div>
-      -->
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:!grid-cols-3 lg:!grid-cols-6 mt-4">
@@ -267,7 +265,7 @@ const amount = computed({
 
     <AdBanner id="chain-home-banner-ad" unit="banner" width="970px" height="90px" />
 
-    <div v-if="store.proposals?.proposals?.length > 0" class="bg-base-100 rounded mt-4 shadow">
+    <div v-if="blockchain.supportModule('governance')" class="bg-base-100 rounded mt-4 shadow">
       <div class="px-4 pt-4 pb-2 text-lg font-semibold text-main">
         {{ $t('index.active_proposals') }}
       </div>
@@ -287,7 +285,7 @@ const amount = computed({
           :to="`/${chain}/account/${walletStore.currentAddress}`">{{ $t('index.more') }}</RouterLink>
       </div>
       <div class="grid grid-cols-1 md:!grid-cols-4 auto-cols-auto gap-4 px-4 pb-6">
-        <div class="bg-gray-100 dark:bg-black rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('account.balance') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.balanceOfStakingToken) }}
@@ -296,7 +294,7 @@ const amount = computed({
             ${{ format.tokenValue(walletStore.balanceOfStakingToken) }}
           </div>
         </div>
-        <div class="bg-gray-100 dark:bg-black rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('module.staking') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.stakingAmount) }}
@@ -305,7 +303,7 @@ const amount = computed({
             ${{ format.tokenValue(walletStore.stakingAmount) }}
           </div>
         </div>
-        <div class="bg-gray-100 dark:bg-black rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('index.reward') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.rewardAmount) }}
@@ -314,7 +312,7 @@ const amount = computed({
             ${{ format.tokenValue(walletStore.rewardAmount) }}
           </div>
         </div>
-        <div class="bg-gray-100 dark:bg-black rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('index.unbonding') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.unbondingAmount) }}

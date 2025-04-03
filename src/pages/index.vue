@@ -4,8 +4,8 @@ import {
   useDashboard,
   LoadingStatus,
   type ChainConfig,
-} from '@/stores/useDashboard';
-import ChainSummary from '@/components/ChainSummary.vue';
+} from '@/stores';
+import ChainSummary from '@/components/xion/ChainSummary.vue';
 import AdBanner from '@/components/ad/AdBanner.vue';
 
 import { computed, onMounted, ref } from 'vue';
@@ -19,8 +19,8 @@ const chains = computed(() => {
     const lowercaseKeywords = keywords.value.toLowerCase();
 
     return Object.values(dashboard.chains).filter(
-      (x: ChainConfig) => x.chainName.toLowerCase().indexOf(lowercaseKeywords) > -1 
-      || x.prettyName.toLowerCase().indexOf(lowercaseKeywords) > -1
+      (x: ChainConfig) => x.chainName.toLowerCase().indexOf(lowercaseKeywords) > -1
+        || x.prettyName.toLowerCase().indexOf(lowercaseKeywords) > -1
     );
   } else {
     return Object.values(dashboard.chains);
@@ -31,7 +31,7 @@ const featured = computed(() => {
   const names = ["cosmos", "osmosis", "akash", "celestia", "evmos", "injective", "dydx", "noble"];
   return chains.value
     .filter(x => names.includes(x.chainName))
-    .sort((a, b)=> (names.indexOf(a.chainName) - names.indexOf(b.chainName)))
+    .sort((a, b) => (names.indexOf(a.chainName) - names.indexOf(b.chainName)))
 })
 
 const chainStore = useBlockchain()
@@ -74,25 +74,16 @@ const chainStore = useBlockchain()
       </p>
     </div>
     -->
-    <div
-      v-if="dashboard.status !== LoadingStatus.Loaded"
-      class="flex justify-center"
-    >
+    <div v-if="dashboard.status !== LoadingStatus.Loaded" class="flex justify-center">
       <progress class="progress progress-info w-80 h-1"></progress>
     </div>
 
-    <div v-if="featured.length>0" class="text-center text-base mt-6 text-primary">
+    <div v-if="featured.length > 0" class="text-center text-base mt-6 text-primary">
       <h2 class="mb-6"> Featured Blockchains 🔥 </h2>
     </div>
 
-    <div v-if="featured.length>0"
-      class="grid grid-cols-1 gap-4 mt-6 md:!grid-cols-3 lg:!grid-cols-4 2xl:!grid-cols-5"
-    >
-    <ChainSummary
-        v-for="(chain, index) in featured"
-        :key="index"
-        :name="chain.chainName"
-      />
+    <div v-if="featured.length > 0" class="grid grid-cols-1 gap-4 mt-6 md:!grid-cols-3 lg:!grid-cols-4 2xl:!grid-cols-5">
+      <ChainSummary v-for="(chain, index) in featured" :key="index" :name="chain.chainName" />
     </div>
 
     <AdBanner id="home-banner-ad" unit="banner" width="970px" height="90px" />
@@ -109,20 +100,16 @@ const chainStore = useBlockchain()
     </div>
     -->
 
-    <div class="flex justify-center"> <div
-      class="grid grid-cols-2 gap-4 mt-6"
-    >
-      <ChainSummary
-        v-for="(chain, index) in chains"
-        :key="index"
-        :name="chain.chainName"
-      />
-    </div></div>
+    <div class="flex justify-center">
+      <div class="grid grid-cols-2 gap-4 mt-6">
+        <ChainSummary v-for="(chain, index) in chains" :key="index" :name="chain.chainName" />
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
- .logo path{
+.logo path {
   fill: #171d30;
 }
 </style>@/components/ad/ad

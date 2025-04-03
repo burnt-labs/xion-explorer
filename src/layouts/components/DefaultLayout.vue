@@ -44,7 +44,7 @@ const changeOpen = (index: Number) => {
     sidebarOpen.value = !sidebarOpen.value;
   }
 };
-const showDiscord = true //window.location.host.search('ping.pub') > -1;
+const showDiscord = window.location.host.search('ping.pub') > -1;
 
 function isNavGroup(nav: VerticalNavItems | any): nav is NavGroup {
    return (<NavGroup>nav).children !== undefined;
@@ -73,7 +73,7 @@ dayjs()
 </script>
 
 <template>
-  <div class="bg-gray-100 dark:bg-black">
+  <div class="bg-gray-100 dark:bg-[#171d30]">
     <!-- sidebar -->
     <div
       class="w-64 fixed z-50 left-0 top-0 bottom-0 overflow-auto bg-base-100 border-r border-gray-100 dark:border-gray-700"
@@ -81,10 +81,10 @@ dayjs()
     >
       <div class="flex justify-between mt-1 pl-4 py-4 mb-1">
         <RouterLink to="/" class="flex items-center">
-            <img class="w-20 h-10" src="/src/assets/images/xion-logo.svg" />
-	    <span class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[12px] uppercase bg-base-200" :style="`color: ${blockchain.current?.themeColor}`">
-		  {{ blockchain.current?.chainName.match("testnet") ? "testnet" : "mainnet" }}
-            </span>
+          <img class="w-10 h-10" src="../../assets/logo.svg" />
+          <h1 class="flex-1 ml-3 text-2xl font-semibold dark:text-white">
+            Ping.pub
+          </h1>
         </RouterLink>
         <div
           class="pr-4 cursor-pointer xl:!hidden"
@@ -108,7 +108,6 @@ dayjs()
             'collapse-close': index === 0 && !sidebarOpen,
           }"
         >
-        <!--
           <input
             v-if="index > 0"
             type="checkbox"
@@ -133,11 +132,9 @@ dayjs()
               class="w-6 h-6 rounded-full mr-3"
             />
             <div
-              class="h-0 text-base capitalize flex-1 text-gray-700 dark:text-gray-200 whitespace-nowrap"
+              class="text-base capitalize flex-1 text-gray-700 dark:text-gray-200 whitespace-nowrap"
             >
-              <span class="font-bold" :style="`color: ${blockchain.current?.themeColor}`">
               {{ item?.title }}
-	      </span>
             </div>
             <div
               v-if="item?.badgeContent"
@@ -146,13 +143,7 @@ dayjs()
             >
               {{ item?.badgeContent }}
             </div>
-            <Icon
-              v-if="index === 0"
-              icon="mdi:apps"
-              class="text-3xl text-primary mr-2"
-            />
           </div>
-	  -->
           <div class="collapse-content">            
             <div v-for="(el, key) of item?.children" class="menu bg-base-100 w-full !p-0">
               <RouterLink
@@ -191,7 +182,6 @@ dayjs()
                 </div>
               </RouterLink>
             </div>
-	    <!--
             <div v-if="index === 0 && dashboard.networkType === NetworkType.Testnet" class="menu bg-base-100 w-full !p-0">
               <RouterLink 
               class="hover:bg-gray-100 dark:hover:bg-[#373f59] rounded cursor-pointer px-3 py-2 flex items-center"
@@ -212,7 +202,6 @@ dayjs()
                 </div>
               </RouterLink>
             </div>
-	    -->
           </div>
         </div>
 
@@ -257,7 +246,6 @@ dayjs()
         </div>
       </div>
       <div class="px-2">
-	  <!--
           <div class="px-4 text-sm pt-2 text-gray-400 pb-2 uppercase">
             Tools
           </div>
@@ -277,7 +265,7 @@ dayjs()
         <Sponsors />
         <div class="px-4 text-sm pt-2 text-gray-400 pb-2 uppercase">{{ $t('module.links') }}</div>
         <a
-          href="https://twitter.com/burnt_xion"
+          href="https://twitter.com/ping_pub"
           target="_blank"
           class="py-2 px-4 flex items-center cursor-pointer rounded-lg hover:bg-gray-100 dark:hover:bg-[#373f59]"
         >
@@ -290,7 +278,7 @@ dayjs()
         </a>
         <a
           v-if="showDiscord"
-          href="https://discord.com/invite/bunrt"
+          href="https://discord.com/invite/CmjYVSr6GW"
           target="_blank"
           class="py-2 px-4 flex items-center rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-[#373f59]"
         >
@@ -313,7 +301,6 @@ dayjs()
             FAQ
           </div>
         </a>
-	-->
       </div>
     </div>
     <div class="xl:!ml-64 px-3 pt-4">
@@ -357,9 +344,8 @@ dayjs()
           </Transition>
         </RouterView>
       </div>
-      <!--
+
       <newFooter />
-      -->
     </div>
   </div>
 </template>

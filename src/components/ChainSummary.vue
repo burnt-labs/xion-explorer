@@ -29,15 +29,11 @@ const addFavor = (e: Event) => {
     :to="`/${name}`"
     class="bg-base-100 hover:bg-gray-100 dark:hover:bg-[#373f59] rounded shadow flex items-center px-3 py-3 cursor-pointer"
   >
-    <div>
-      <img class="w-12 h-7" src="/src/assets/images/xion-logo.svg" />
+    <div class="w-8 h-8 rounded-full overflow-hidden">
+      <img :src="conf.logo" />
     </div>
     <div class="font-semibold ml-4 text-base flex-1 truncate capitalize">
-      <span :style="`color: ${conf?.themeColor}`">
-        <span class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[10px] uppercase bg-base-200">
-          {{ name.match("testnet") ? "testnet" : "mainnet" }}
-        </span>
-      </span>
+      {{ conf?.prettyName || props.name }}
     </div>
     <div
       @click="addFavor"
