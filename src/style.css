@@ -4,7 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
-html,body {
+html,
+body {
   height: 100%;
 }
 
@@ -30,7 +31,36 @@ html.dark,
 html[data-theme='dark'] {
   --text-main: #f7f7f7;
   --text-secondary: #6f6e84;
-  --bg-active: #242b40;
+  --bg-active: #1a1a1a;
+}
+
+html.dark .bg-base-100,
+html[data-theme='black'] .bg-base-100 {
+  background-color: #1a1a1a;
+}
+
+html[data-theme='black'] th,
+.bg-base-200 {
+  background-color: #000000;
+}
+
+html.dark tr.hover:hover,
+html[data-theme='black'] tr.hover:hover {
+  background-color: #3a3a3a;
+}
+
+html.dark .modal-box,
+html[data-theme='black'] .modal-box {
+  background-color: #000000;
+}
+
+html.dark input,
+textarea.textarea,
+select.select,
+html[data-theme='dark'] input,
+textarea.textarea,
+select.select {
+  background-color: #1a1a1a;
 }
 
 .table th:first-child {
