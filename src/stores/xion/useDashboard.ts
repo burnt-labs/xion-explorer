@@ -327,7 +327,6 @@ export const useDashboard = defineStore('dashboard', {
     async loadingFromXion() {
       const source: Record<string, LocalConfig> =
         import.meta.glob('../../../chains/xion/*.json', { eager: true });
-      console.log(source)
       Object.values<LocalConfig>(source).forEach((x: LocalConfig) => {
         this.chains[x.chain_name] = fromLocal(x);
       });

@@ -113,7 +113,7 @@ dayjs()
                 <div class="text-base capitalize text-gray-500 dark:text-gray-300" :class="{
                   '!text-white': selected($route, el),
                 }">
-                  {{ item?.title === 'Favorite' ? el?.title : $t(el?.title) }}
+                  {{ item?.title === 'Favorite' ? el?.title : $t(el?.title || '') }}
                 </div>
               </RouterLink>
             </div>

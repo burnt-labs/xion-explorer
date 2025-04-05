@@ -13,7 +13,7 @@ export interface PriceMeta {
 
 const LocalStoreKey = 'currency';
 
-export const coingeckoUrl = 'https://coingecko-proxy.burnt.com'
+export const coingeckoUrl = window.location.hostname === 'localhost' ? 'https://api.coingecko.com' : 'https://coingecko-proxy.burnt.com'
 
 export const useCoingecko = defineStore('coingecko', {
   state: () => {

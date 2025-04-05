@@ -68,16 +68,15 @@ export const useBlockchain = defineStore('blockchain', {
       let currNavItem: VerticalNavItems = [];
       const router = useRouter();
       const routes = router?.getRoutes() || [];
-      console.log('routes', routes);
       if (this.current && routes) {
         if (this.current?.themeColor) {
           const { color } = hexToRgb(this.current?.themeColor);
           const { h, s, l } = rgbToHsl(color);
           const themeColor = h + ' ' + s + '% ' + l + '%';
-          document.body.style.setProperty('--bc', `${themeColor}`);
+          //document.body.style.setProperty('--bc', `${themeColor}`);
           // document.body.style.setProperty('--p', `${this.current?.themeColor}`);
         } else {
-          document.body.style.setProperty('--p', '237.65 100% 70%');
+          //document.body.style.setProperty('--p', '237.65 100% 70%');
         }
         currNavItem = [
           {

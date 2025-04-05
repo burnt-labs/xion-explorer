@@ -1,12 +1,12 @@
 {
   "extends": "@vue/tsconfig/tsconfig.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"],
+  "exclude": ["src/**/__tests__/*", "src/**/*.vue.d.ts"],
   "compilerOptions": {
-    // "ignoreDeprecations": "5.0",
-    "lib": [      
-      "es2022",
-      "dom"
-    ],
+    "ignoreDeprecations": "5.0",
+    "lib": ["es2022", "dom"],
+    "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
@@ -15,7 +15,10 @@
 
   "references": [
     {
-      "path": "./tsconfig.config.json"
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.worker.json"
     }
   ]
 }

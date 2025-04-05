@@ -23,7 +23,6 @@ import {
   useWalletStore
 } from '.';
 import { useBlockModule } from '@/modules/[chain]/block/block';
-import { DEFAULT } from '@/libs';
 import { hexToRgb, rgbToHsl } from '@/libs/utils';
 
 export const useBlockchain = defineStore('blockchain', {
@@ -45,7 +44,7 @@ export const useBlockchain = defineStore('blockchain', {
       const chain = this.dashboard.chains[this.chainName]
       // update chain config with dynamic updated sdk version
       const sdkversion = localStorage.getItem(`sdk_version_${this.chainName}`)
-      if(sdkversion && chain?.versions) {
+      if (sdkversion && chain?.versions) {
         chain.versions.cosmosSdk = sdkversion;
       }
       return chain;
@@ -72,7 +71,7 @@ export const useBlockchain = defineStore('blockchain', {
         if (this.current?.themeColor) {
           const { color } = hexToRgb(this.current?.themeColor);
           const { h, s, l } = rgbToHsl(color);
-          const themeColor = h + ' ' + s + '% ' + l +'%';
+          const themeColor = h + ' ' + s + '% ' + l + '%';
           document.body.style.setProperty('--p', `${themeColor}`);
           // document.body.style.setProperty('--p', `${this.current?.themeColor}`);
         } else {
@@ -157,7 +156,7 @@ export const useBlockchain = defineStore('blockchain', {
       useDistributionStore().initial();
     },
 
-    randomEndpoint(chainName: string) : Endpoint | undefined {
+    randomEndpoint(chainName: string): Endpoint | undefined {
       const end = localStorage.getItem(`endpoint-${chainName}`);
       if (end) {
         return JSON.parse(end);
@@ -173,7 +172,7 @@ export const useBlockchain = defineStore('blockchain', {
 
     async randomSetupEndpoint() {
       const endpoint = this.randomEndpoint(this.chainName)
-      if(endpoint) await this.setRestEndpoint(endpoint);
+      if (endpoint) await this.setRestEndpoint(endpoint);
     },
 
     async setRestEndpoint(endpoint: Endpoint) {
@@ -187,13 +186,13 @@ export const useBlockchain = defineStore('blockchain', {
     },
     async setCurrent(name: string) {
       // Ensure chains are loaded due to asynchronous calls.
-      if(this.dashboard.length === 0) {
+      if (this.dashboard.length === 0) {
         await this.dashboard.initial();
       }
 
       // Find the case-sensitive name for the chainName, else simply use the parameter-value.
-      const caseSensitiveName = 
-        Object.keys(this.dashboard.chains).find((x) => x.toLowerCase() === name.toLowerCase()) 
+      const caseSensitiveName =
+        Object.keys(this.dashboard.chains).find((x) => x.toLowerCase() === name.toLowerCase())
         || name;
 
       // Update chainName if needed

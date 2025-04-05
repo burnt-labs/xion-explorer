@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
@@ -11,7 +12,7 @@ module.exports = {
         main: 'var(--text-main)',
         secondary: 'var(--text-secondary)',
         active: 'var(--bg-active)',
-      }
+      },
     },
   },
   plugins: [require('daisyui')],
@@ -28,9 +29,11 @@ module.exports = {
           ...require('daisyui/src/theming/themes')['[data-theme=dark]'],
           primary: '#666cff',
           'base-100': '#2a334c',
-          'base-200': '#252d37'
+          'base-200': '#252d37',
         },
       },
     ],
   },
 };
+
+export default config;

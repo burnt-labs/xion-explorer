@@ -7,6 +7,7 @@ import Layouts from 'vite-plugin-vue-layouts';
 import DefineOptions from 'unplugin-vue-define-options/vite';
 import AutoImport from 'unplugin-auto-import/vite';
 import Pages from 'vite-plugin-pages';
+//import { cloudflare } from "@cloudflare/vite-plugin"
 
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
@@ -16,6 +17,7 @@ export default defineConfig({
     'process.env': {}
   },
   plugins: [
+    //cloudflare(),
     vue({
       template: {
         compilerOptions: {

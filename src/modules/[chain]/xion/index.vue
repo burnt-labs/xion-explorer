@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import MdEditor from 'md-editor-v3';
 import PriceMarketChart from '@/components/charts/PriceMarketChart.vue';
 
 import { Icon } from '@iconify/vue';
@@ -133,7 +132,7 @@ const amount = computed({
           <div class="text-xl font-semibold text-main">
             {{ coinInfo.name }} (<span class="uppercase">{{
               coinInfo.symbol
-            }}</span>)
+              }}</span>)
           </div>
           <div class="text-xs mt-2">
             {{ $t('index.rank') }}:
