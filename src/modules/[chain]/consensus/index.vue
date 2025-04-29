@@ -33,7 +33,7 @@ onMounted(async () => {
   clearTime()
   timer = setInterval(() => {
     update();
-  }, 6000);
+  }, 1500);
 });
 onUnmounted(() => {
   clearTime();
