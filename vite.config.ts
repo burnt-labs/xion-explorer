@@ -30,11 +30,11 @@ export default defineConfig({
     }),
     vueJsx(),
     Pages({
-      dirs: ['./src/modules', './src/pages'],
+      dirs: ['./src/modules', './src/pages', './src/pages/xion'],
       exclude: ['**/*.ts'], // only load .vue as modules
     }),
     Layouts({
-      layoutsDirs: './src/layouts/',
+      layoutsDirs: ['/src/layouts/xion/', './src/layouts/',]
     }),
     AutoImport({
       imports: [
@@ -52,8 +52,8 @@ export default defineConfig({
       compositionOnly: true,
       include: [
         fileURLToPath(
-          new URL('./src/plugins/i18n/locales/**', import.meta.url)
-        ),
+          new URL('./src/plugins/i18n/locales', import.meta.url)
+        ) + '/**',
       ],
     }),
     DefineOptions(),
