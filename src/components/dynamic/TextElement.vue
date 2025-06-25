@@ -3,7 +3,7 @@ import { isBech32Address } from '@/libs/utils';
 import { useBlockchain, useFormatter } from '@/stores';
 import MdEditor from 'md-editor-v3';
 import { computed, onMounted, ref } from 'vue';
-// import nameMatcha from '@leapwallet/name-matcha'
+import { registry as nameMatcha } from '@leapwallet/name-matcha'
 import { fromBase64, toHex } from '@cosmjs/encoding';
 
 const chainStore = useBlockchain()
@@ -43,9 +43,9 @@ const text = computed(() => {
 const names = ref([] as { name?: string | null, provider?: string }[])
 
 onMounted(() => {
-  // if(isAddress()) nameMatcha.lookupAll(props.value).then(re => {
-  //   names.value = Object.keys(re).map(key => ({name: re[key], provider: key})).filter( x => x.name)
-  // })
+  if (isAddress()) nameMatcha.lookupAll(props.value).then(re => {
+    names.value = Object.keys(re).map(key => ({ name: re[key], provider: key })).filter(x => x.name)
+  })
 })
 const toHexOutput = ref(false)
 const isConvertable = computed(() => {
