@@ -13,9 +13,9 @@ const modRoutes = filteredRoutes.map((route: any) => {
   if (route.name === 'chain-xion') {
     route.path = '/:chain'
   }
-  if (route.name === 'chain-xion-supply') {
-    route.path = '/:chain/supply'
-  }
+  // if (route.name === 'chain-xion-supply') {
+  //   route.path = '/:chain/supply'
+  // }
   return route;
 })
 

@@ -142,7 +142,8 @@
     "supply",
     "parameters",
     "consensus",
-    "cosmwasm"
+    "cosmwasm",
+    "account"
   ],
   "keplr_features": [
     "ibc-go",
