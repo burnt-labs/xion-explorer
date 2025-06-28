@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useBlockchain, useBaseStore, type Endpoint } from '@/stores';
-import { useRouter } from 'vue-router';
+import { useBlockchain, useBaseStore } from '@/stores';
+import type { Endpoint } from '@/types/chaindata';
 const chainStore = useBlockchain();
 const baseStore = useBaseStore();
 chainStore.initial();
