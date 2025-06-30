@@ -1,12 +1,9 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.json",
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "exclue": ["src/components/ad/ad.ts"],
   "compilerOptions": {
     // "ignoreDeprecations": "5.0",
-    "lib": [      
-      "es2022",
-      "dom"
-    ],
+    "lib": ["es2022", "dom"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
@@ -16,6 +13,9 @@
   "references": [
     {
       "path": "./tsconfig.config.json"
+    },
+    {
+      "path": "./tsconfig.worker.json"
     }
   ]
 }
