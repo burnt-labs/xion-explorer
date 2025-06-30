@@ -33,3 +33,9 @@ coverage
 .wrangler
 .dev.vars*
 chains/xion/xion-testnet-1.json
+.idea
+
+# local env files
+/.env.*
+/.env*.local
+!/.env.example
