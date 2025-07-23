@@ -77,7 +77,8 @@
     "vite": "^4.4.9",
     "vite-plugin-pages": "^0.28.0",
     "vue-json-viewer": "3",
-    "vue-tsc": "^1.0.12"
+    "vue-tsc": "^1.0.12",
+    "wrangler": "^4.14.7"
   },
   "husky": {
     "hooks": {

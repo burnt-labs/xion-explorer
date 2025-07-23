@@ -34,12 +34,15 @@ const voterStatusMap: Record<string, string> = {
 
 const proposalInfo = ref();
 
-function metaItem(metadata: string | undefined): { title: string; summary: string } {
+function metaItem(metadata: string | undefined): {
+  title: string;
+  summary: string;
+} {
   return metadata ? JSON.parse(metadata) : {};
 }
 </script>
 <template>
-  <div class="bg-white dark:bg-[#28334e] rounded text-sm">
+  <div class="bg-white dark:bg-black rounded text-sm">
     <table class="table-compact w-full table-fixed hidden lg:!table">
       <tbody>
         <tr v-for="(item, index) in proposals?.proposals" :key="index">
@@ -58,11 +61,7 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
                 :to="`/${chain.chainName}/gov/${item?.proposal_id}`"
                 class="text-main text-base mb-1 block hover:text-indigo-400 truncate"
               >
-                {{
-                  item?.content?.title ||
-                  item?.title ||
-                  metaItem(item?.metadata)?.title
-                }}
+                {{ item?.content?.title || item?.title || metaItem(item?.metadata)?.title }}
               </RouterLink>
               <div
                 v-if="item.content"

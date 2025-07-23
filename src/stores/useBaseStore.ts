@@ -26,7 +26,7 @@ export const useBaseStore = defineStore('baseStore', {
           return diff / blocks;
         }
       }
-      return 6000;
+      return 1500;
     },
     blockchain() {
       return useBlockchain();
