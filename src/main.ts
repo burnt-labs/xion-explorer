@@ -19,6 +19,8 @@ app.use(LazyLoad, { component: true });
 // Mount vue app
 app.mount('#app');
 
+const REFRESH_INTERVAL = import.meta.env.VITE_REFRESH_INTERVAL || 6000; // 6 seconds
+
 // fetch latest block every 6s
 const blockStore = useBaseStore();
 const requestCounter = ref(0);
@@ -28,4 +30,4 @@ setInterval(() => {
     // max allowed request
     blockStore.fetchLatest().finally(() => (requestCounter.value -= 1));
   }
-}, 1500);
+}, REFRESH_INTERVAL);

@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.idea
 node_modules
 .DS_Store
 dist
@@ -32,4 +33,6 @@ coverage
 # wrangler files
 .wrangler
 .dev.vars*
-chains/xion/xion-testnet-1.json
+
+.env*
+!.env.example
