@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useBlockchain } from '@/stores/xion/useBlockchain';
+import { useBlockchain, useStakingStore, useDashboard } from '@/stores';
 import numeral from 'numeral';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -7,13 +7,11 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 import localeData from 'dayjs/plugin/localeData';
-import { useStakingStore } from '../useStakingStore';
 import { fromBase64, fromBech32, fromHex, toHex } from '@cosmjs/encoding';
 import { consensusPubkeyToHexAddress, get } from '@/libs';
-import { useBankStore } from '../useBankStore';
+import { useBankStore } from '@/stores';
 import type { Coin, DenomTrace } from '@/types';
-import { useDashboard } from '@/stores/xion/useDashboard';
-import type { Asset } from '@ping-pub/chain-registry-client/dist/types';
+import type { Asset } from '@/types/chaindata';
 
 dayjs.extend(localeData);
 dayjs.extend(duration);
@@ -232,7 +230,7 @@ export const useFormatter = defineStore('formatter', {
         if (conf) {
           let unit = { exponent: 0, denom: '' };
           // find the max exponent for display
-          conf.denom_units.forEach((x: any) => {
+          conf.denom_units.forEach((x) => {
             if (x.exponent >= unit.exponent) {
               unit = x;
             }
@@ -268,7 +266,7 @@ export const useFormatter = defineStore('formatter', {
         if (conf) {
           let unit = { exponent: 0, denom: '' };
           // find the max exponent for display
-          conf.denom_units.forEach((x: any) => {
+          conf.denom_units.forEach((x) => {
             if (x.exponent >= unit.exponent) {
               unit = x;
             }

@@ -114,9 +114,7 @@ const upgradeCountdown = computed((): number => {
   if (height > 0) {
     const base = useBaseStore();
     const current = Number(base.latest?.block?.header?.height || 0);
-    return (
-      (height - current) * Number((base.blocktime / 1000).toFixed()) * 1000
-    );
+    return (height - current) * Number((base.blocktime / 1000).toFixed()) * 1000;
   }
   const now = new Date();
   const end = new Date(proposal.value.content?.plan?.time || '');
@@ -216,9 +214,7 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
 <template>
   <div>
     <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
-      <h2
-        class="card-title flex flex-col md:!justify-between md:!flex-row mb-2"
-      >
+      <h2 class="card-title flex flex-col md:!justify-between md:!flex-row mb-2">
         <p class="truncate w-full">
           {{ proposal_id }}. {{ proposal.title || proposal.content?.title || metaItem(proposal?.metadata)?.title }}
         </p>
@@ -234,11 +230,7 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
       </div>
       <div v-if="(proposal.summary && !proposal.content?.description) || metaItem(proposal?.metadata)?.summary">
         <MdEditor
-          :model-value="
-            format.multiLine(
-              proposal.summary || metaItem(proposal?.metadata)?.summary
-            )
-          "
+          :model-value="format.multiLine(proposal.summary || metaItem(proposal?.metadata)?.summary)"
           previewOnly
           class="md-editor-recover"
         ></MdEditor>

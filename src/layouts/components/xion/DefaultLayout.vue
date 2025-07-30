@@ -7,8 +7,7 @@ import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue';
 import NavbarSearch from '@/layouts/components/NavbarSearch.vue';
 import ChainProfile from '@/layouts/components/ChainProfile.vue';
 
-import { useDashboard } from '@/stores/useDashboard';
-import { useBaseStore, useBlockchain } from '@/stores';
+import { useDashboard, useBaseStore, useBlockchain } from '@/stores';
 
 import NavBarI18n from '@/layouts/components/NavBarI18n.vue';
 import NavBarWallet from '@/layouts/components/NavBarWallet.vue';
@@ -91,7 +90,7 @@ dayjs();
                 ? 'testnet'
                 : blockchain.current?.chainName.match('devnet')
                 ? 'devnet'
-                : blockchain.current?.chainNam
+                : blockchain.current?.chainName
             }}
           </span>
         </RouterLink>

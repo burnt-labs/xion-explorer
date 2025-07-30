@@ -176,10 +176,7 @@ function callFunction(title: string, method: string, arg: Argument) {
   } else {
     // QueryMsg
     wasmStore.wasmClient
-      .getWasmContractSmartQuery(
-        props.contract,
-        `{"${method}": ${JSON.stringify(args)}}`
-      )
+      .getWasmContractSmartQuery(props.contract, `{"${method}": ${JSON.stringify(args)}}`)
       .then((x) => {
         result.value[`${title}-${method}`] = x;
       })

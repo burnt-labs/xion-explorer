@@ -15,7 +15,7 @@ export const useBlockModule = defineStore('blockModule', {
     txsInRecents() {
       return useBaseStore().txsInRecents;
     },
-    latest(){
+    latest() {
       return useBaseStore().latest;
     },
     earliest() {
@@ -23,20 +23,20 @@ export const useBlockModule = defineStore('blockModule', {
     },
     recents() {
       return useBaseStore().recents;
-    }
+    },
   },
   actions: {
     initial() {
       this.clearRecentBlocks();
     },
     async clearRecentBlocks() {
-      return this.baseStore.clearRecentBlocks()
+      return this.baseStore.clearRecentBlocks();
     },
     async fetchLatest() {
-      return this.baseStore.fetchLatest()
+      return this.baseStore.fetchLatest();
     },
     async fetchBlock(height: string) {
-      return this.baseStore.fetchBlock(height)
+      return this.baseStore.fetchBlock(height);
     },
   },
 });

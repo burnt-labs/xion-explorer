@@ -3,7 +3,7 @@ export * from './xion/useBlockchain';
 export * from './xion/useCoinGecko';
 export * from './xion/useDashboard';
 export * from './useBaseStore';
-export * from './xion/useFormatter';
+export * from './useFormatter';
 export * from './useGovStore';
 export * from './useMintStore';
 export * from './useStakingStore';

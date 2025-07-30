@@ -1,17 +1,18 @@
 import { defineStore } from 'pinia';
-import { useDashboard, type ChainConfig, type Endpoint, EndpointType } from '@/stores/xion/useDashboard';
-import type { NavLink, VerticalNavItems } from '@/layouts/types';
+import type { ChainConfig, Endpoint } from '@/types/chaindata';
+import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@/layouts/types';
 import { useRouter } from 'vue-router';
 import { CosmosRestClient } from '@/libs/client';
 import {
   useBankStore,
   useBaseStore,
+  useDashboard,
   useDistributionStore,
   useGovStore,
   useMintStore,
   useStakingStore,
   useWalletStore,
-} from '..';
+} from '@/stores';
 import { useBlockModule } from '@/modules/[chain]/block/block';
 import { hexToRgb, rgbToHsl } from '@/libs/utils';
 
@@ -21,20 +22,13 @@ export const useBlockchain = defineStore('blockchain', {
       status: {} as Record<string, string>,
       rest: '',
       chainName: '',
-      endpoint: {} as {
-        type?: EndpointType;
-        address: string;
-        provider: string;
-      },
+      endpoint: {} as Endpoint,
       connErr: '',
     };
   },
   getters: {
     current(): ChainConfig | undefined {
-      const chainList = this.dashboard.chains;
-      const chainNames = Object.keys(chainList);
-      const defaultChain = chainNames.length > 0 ? chainNames[0] : '';
-      const chain = this.chainName ? chainList[this.chainName] : chainList[defaultChain];
+      const chain = this.dashboard.chains[this.chainName];
       // update chain config with dynamic updated sdk version
       const sdkversion = localStorage.getItem(`sdk_version_${this.chainName}`);
       if (sdkversion && chain?.versions) {
@@ -93,7 +87,7 @@ export const useBlockchain = defineStore('blockchain', {
       }
       // compute favorite menu
       const favNavItems: VerticalNavItems = [];
-      Object.keys(this.dashboard.chains).forEach((name) => {
+      Object.keys(this.dashboard.favoriteMap).forEach((name) => {
         const ch = this.dashboard.chains[name];
         if (ch && this.dashboard.favoriteMap?.[name]) {
           favNavItems.push({
@@ -108,16 +102,16 @@ export const useBlockchain = defineStore('blockchain', {
       return [
         ...currNavItem,
         /*
-              { heading: 'Ecosystem' } as NavSectionTitle,
-              {
-                title: 'Favorite',
-                children: favNavItems,
-                badgeContent: favNavItems.length,
-                badgeClass: 'bg-primary',
-                i18n: true,
-                icon: { icon: 'mdi-star', size: '22' },
-              } as NavGroup,
-              */
+        { heading: 'Ecosystem' } as NavSectionTitle,
+        {
+          title: 'Favorite',
+          children: favNavItems,
+          badgeContent: favNavItems.length,
+          badgeClass: 'bg-primary',
+          i18n: true,
+          icon: { icon: 'mdi-star', size: '22' },
+        } as NavGroup,
+         */
         {
           title: 'Xion Networks',
           to: { path: '/' },

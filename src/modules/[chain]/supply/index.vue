@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import { ref } from '@vue/reactivity';
 import { useBlockchain, useFormatter } from '@/stores';
-import {
-  PageRequest,
-  type Pagination,
-  type Coin,
-  type DenomMetadata,
-} from '@/types';
+import { PageRequest, type Pagination, type Coin, type DenomMetadata } from '@/types';
 import { onMounted } from 'vue';
 import type { Asset } from '@/types/chaindata';
 import PaginationBar from '@/components/PaginationBar.vue';
@@ -95,11 +90,7 @@ function pageload(p: number) {
         <td>{{ item.base }}</td>
       </tr>
     </table>
-    <PaginationBar
-      :limit="pageRequest.limit"
-      :total="pageResponse.total"
-      :callback="pageload"
-    />
+    <PaginationBar :limit="pageRequest.limit" :total="pageResponse.total" :callback="pageload" />
   </div>
 </template>
 

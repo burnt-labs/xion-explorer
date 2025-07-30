@@ -1,20 +1,19 @@
 import { defineStore } from 'pinia';
 import type { ChainConfig, Endpoint } from '@/types/chaindata';
-import { useDashboard} from './useDashboard';
 import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@/layouts/types';
 import { useRouter } from 'vue-router';
 import { CosmosRestClient } from '@/libs/client';
 import {
   useBankStore,
   useBaseStore,
+  useDashboard,
   useDistributionStore,
   useGovStore,
   useMintStore,
   useStakingStore,
   useWalletStore,
-} from '.';
+} from '@/stores';
 import { useBlockModule } from '@/modules/[chain]/block/block';
-import { DEFAULT } from '@/libs';
 import { hexToRgb, rgbToHsl } from '@/libs/utils';
 
 export const useBlockchain = defineStore('blockchain', {

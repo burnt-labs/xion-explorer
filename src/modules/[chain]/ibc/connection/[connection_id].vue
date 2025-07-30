@@ -115,9 +115,7 @@ function color(v: string) {
         <dl class="grid grid-cols-1 gap-x-6 text-center lg:!grid-cols-3">
           <div class="mx-auto flex items-center">
             <div>
-              <div
-                class="order-first text-3xl font-semibold tracking-tight text-main mb-1"
-              >
+              <div class="order-first text-3xl font-semibold tracking-tight text-main mb-1">
                 {{ baseStore.latest?.block?.header?.chain_id }}
               </div>
               <div class="text-sm text-gray-500 dark:text-gray-400">{{ conn.client_id }} {{ props.connection_id }}</div>
@@ -132,9 +130,7 @@ function color(v: string) {
             </div>
           </div>
           <div class="mx-auto">
-            <div
-              class="order-first text-3xl font-semibold tracking-tight text-main mb-2"
-            >
+            <div class="order-first text-3xl font-semibold tracking-tight text-main mb-2">
               {{ clientState.client_state?.chain_id }}
             </div>
             <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -274,26 +270,12 @@ function color(v: string) {
             <tr v-for="v in channels">
               <td>
                 <div class="flex gap-1">
-                  <button
-                    class="btn btn-xs"
-                    @click="fetchSendingTxs(v.channel_id, v.port_id)"
-                    :disabled="loading"
-                  >
-                    <span
-                      v-if="loading"
-                      class="loading loading-spinner loading-sm"
-                    ></span>
+                  <button class="btn btn-xs" @click="fetchSendingTxs(v.channel_id, v.port_id)" :disabled="loading">
+                    <span v-if="loading" class="loading loading-spinner loading-sm"></span>
                     {{ $t('ibc.btn_out') }}
                   </button>
-                  <button
-                    class="btn btn-xs"
-                    @click="fetchRecevingTxs(v.channel_id, v.port_id)"
-                    :disabled="loading"
-                  >
-                    <span
-                      v-if="loading"
-                      class="loading loading-spinner loading-sm"
-                    ></span>
+                  <button class="btn btn-xs" @click="fetchRecevingTxs(v.channel_id, v.port_id)" :disabled="loading">
+                    <span v-if="loading" class="loading loading-spinner loading-sm"></span>
                     {{ $t('ibc.btn_in') }}
                   </button>
                 </div>
@@ -303,14 +285,8 @@ function color(v: string) {
               </td>
               <td>{{ v.port_id }}</td>
               <td>
-                <div
-                  class="text-xs truncate relative py-2 px-4 rounded-full w-fit"
-                  :class="`text-${color(v.state)}`"
-                >
-                  <span
-                    class="inset-x-0 inset-y-0 opacity-10 absolute"
-                    :class="`bg-${color(v.state)}`"
-                  ></span>
+                <div class="text-xs truncate relative py-2 px-4 rounded-full w-fit" :class="`text-${color(v.state)}`">
+                  <span class="inset-x-0 inset-y-0 opacity-10 absolute" :class="`bg-${color(v.state)}`"></span>
                   {{ v.state }}
                 </div>
               </td>
@@ -339,20 +315,13 @@ function color(v: string) {
             <td>{{ resp.height }}</td>
             <td>
               <div class="text-xs truncate text-primary dark:invert">
-                <RouterLink
-                  :to="`/${chainStore.chainName}/tx/${resp.txhash}`"
-                  >{{ resp.txhash }}</RouterLink
-                >
+                <RouterLink :to="`/${chainStore.chainName}/tx/${resp.txhash}`">{{ resp.txhash }}</RouterLink>
               </div>
             </td>
             <td>
               <div class="flex">
                 {{ format.messages(resp.tx.body.messages) }}
-                <Icon
-                  v-if="resp.code === 0"
-                  icon="mdi-check"
-                  class="text-success text-lg"
-                />
+                <Icon v-if="resp.code === 0" icon="mdi-check" class="text-success text-lg" />
                 <Icon v-else icon="mdi-multiply" class="text-error text-lg" />
               </div>
             </td>
@@ -360,11 +329,7 @@ function color(v: string) {
           </tr>
         </tbody>
       </table>
-      <PaginationBar
-        :limit="page.limit"
-        :total="txs.pagination?.total"
-        :callback="pageload"
-      />
+      <PaginationBar :limit="page.limit" :total="txs.pagination?.total" :callback="pageload" />
     </div>
   </div>
 </template>

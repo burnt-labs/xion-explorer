@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { get } from '../../libs/http';
-import type { LoadingStatus } from '../useDashboard';
+import { get } from '@/libs/http';
+import type { LoadingStatus } from '@/stores/useDashboard';
 
 export interface PriceMeta {
   usd?: string;
@@ -13,7 +13,7 @@ export interface PriceMeta {
 
 const LocalStoreKey = 'currency';
 
-export const coingeckoUrl = 'https://coingecko-proxy.burnt.com';
+export const coingeckoUrl = import.meta.env.VITE_COINGECKO_URL || 'https://api.coingecko.com';
 
 export const useCoingecko = defineStore('coingecko', {
   state: () => {

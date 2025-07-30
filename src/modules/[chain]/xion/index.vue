@@ -48,28 +48,30 @@ function shortName(name: string, id: string) {
   return name.toLowerCase().startsWith('ibc/') || name.toLowerCase().startsWith('0x') ? id : name;
 }
 
-const comLinks = [
-  {
-    name: 'Website',
-    icon: 'mdi-web',
-    href: store.homepage,
-  },
-  {
-    name: 'Twitter',
-    icon: 'mdi-twitter',
-    href: store.twitter,
-  },
-  {
-    name: 'Telegram',
-    icon: 'mdi-telegram',
-    href: store.telegram,
-  },
-  {
-    name: 'Github',
-    icon: 'mdi-github',
-    href: store.github,
-  },
-];
+const comLinks = computed(() => {
+  return [
+    {
+      name: 'Website',
+      icon: 'mdi-web',
+      href: store.homepage,
+    },
+    {
+      name: 'Twitter',
+      icon: 'mdi-twitter',
+      href: store.twitter,
+    },
+    {
+      name: 'Telegram',
+      icon: 'mdi-telegram',
+      href: store.telegram,
+    },
+    {
+      name: 'Github',
+      icon: 'mdi-github',
+      href: store.github,
+    },
+  ];
+});
 
 // wallet box
 const change = computed(() => {

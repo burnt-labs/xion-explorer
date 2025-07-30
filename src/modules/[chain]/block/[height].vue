@@ -94,9 +94,7 @@ onBeforeRouteUpdate(async (to, from, next) => {
               </tr>
               <tr>
                 <td>{{ $t('block.current_height') }}:</td>
-                <td class="text-right">
-                  #{{ store.latest?.block?.header.height }}
-                </td>
+                <td class="text-right">#{{ store.latest?.block?.header.height }}</td>
               </tr>
               <tr>
                 <td>{{ $t('block.remaining_blocks') }}:</td>
@@ -104,9 +102,7 @@ onBeforeRouteUpdate(async (to, from, next) => {
               </tr>
               <tr>
                 <td>{{ $t('block.average_block_time') }}:</td>
-                <td class="text-right">
-                  {{ (store.blocktime / 1000).toFixed(1) }}s
-                </td>
+                <td class="text-right">{{ (store.blocktime / 1000).toFixed(1) }}s</td>
               </tr>
             </tbody>
           </table>
