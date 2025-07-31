@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { useBlockchain, useBankStore, useStakingStore, useDashboard } from '@/stores';
+import { useBlockchain, useStakingStore, useDashboard } from '@/stores';
 import numeral from 'numeral';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -7,8 +7,9 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import utc from 'dayjs/plugin/utc';
 import localeData from 'dayjs/plugin/localeData';
-import { fromBase64, fromHex, toHex } from '@cosmjs/encoding';
+import { fromBase64, fromBech32, fromHex, toHex } from '@cosmjs/encoding';
 import { consensusPubkeyToHexAddress, get } from '@/libs';
+import { useBankStore } from '@/stores';
 import type { Coin, DenomTrace } from '@/types';
 import type { Asset } from '@/types/chaindata';
 
@@ -70,8 +71,13 @@ export const useFormatter = defineStore('formatter', {
     async fetchDenomMetadata(denom: string) {
       if (this.loading.includes(denom)) return;
       this.loading.push(denom);
-      const asset = (await get(`https://metadata.ping.pub/metadata/${denom}`)) as Asset;
-      this.ibcMetadata[denom] = asset;
+      const assets = this.blockchain.current?.assets;
+      if (assets) {
+        const asset = assets.find((a: Asset) => a.base.endsWith(denom));
+        if (asset) {
+          this.ibcMetadata[denom] = asset;
+        }
+      }
     },
     priceInfo(denom: string) {
       const id = this.dashboard.coingecko[denom]?.coinId || '';

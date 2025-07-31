@@ -138,7 +138,7 @@ export enum LoadingStatus {
 
 export const useDashboard = defineStore('dashboard', {
   state: () => {
-    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"cosmos":true, "osmosis":true}');
+    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"xion-mainnet-1":true, "xion-testnet-2":true}');
     return {
       status: LoadingStatus.Empty,
       source: ConfigSource.MainnetCosmosDirectory,
@@ -181,7 +181,7 @@ export const useDashboard = defineStore('dashboard', {
 
       const currencies = ['usd, cny']; // usd,cny,eur,jpy,krw,sgd,hkd
       get(
-        `https://api.coingecko.com/api/v3/simple/price?include_24hr_change=true&vs_currencies=${currencies.join(
+        `${coingeckoUrl}/api/v3/simple/price?include_24hr_change=true&vs_currencies=${currencies.join(
           ','
         )}&ids=${coinIds.join(',')}`
       ).then((x) => {
@@ -205,8 +205,8 @@ export const useDashboard = defineStore('dashboard', {
       }
       const source: Record<string, LocalChainConfig> =
         this.networkType === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+          ? import.meta.glob('../../../chains/xion/*.json', { eager: true })
+          : import.meta.glob('../../../chains/xion/*.json', { eager: true });
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         this.chains[x.chain_name] = convertFromLocal(x);
       });
@@ -217,8 +217,8 @@ export const useDashboard = defineStore('dashboard', {
       const config: Record<string, ChainConfig> = {};
       const source: Record<string, LocalChainConfig> =
         network === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+          ? import.meta.glob('../../../chains/xion/*.json', { eager: true })
+          : import.meta.glob('../../../chains/xion/*.json', { eager: true });
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         config[x.chain_name] = convertFromLocal(x);
       });

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { get } from '@/libs/http';
-import type { LoadingStatus } from '@/stores';
+import type { LoadingStatus } from '@/stores/useDashboard';
 
 export interface PriceMeta {
   usd?: string;

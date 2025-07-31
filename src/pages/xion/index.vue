@@ -4,7 +4,7 @@ import { useDashboard, LoadingStatus } from '@/stores';
 import type { ChainConfig } from '@/types/chaindata';
 import ChainSummary from '@/components/xion/ChainSummary.vue';
 
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useBlockchain } from '@/stores';
 
 const dashboard = useDashboard();
@@ -123,4 +123,3 @@ const chainStore = useBlockchain();
   fill: #171d30;
 }
 </style>
-@/components/ad/ad
