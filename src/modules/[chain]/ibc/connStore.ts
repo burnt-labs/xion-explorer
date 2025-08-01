@@ -42,9 +42,10 @@ export const useIBCModule = defineStore('module-ibc', {
   },
   actions: {
     load() {
+      const prefix = this.chain.current?.networkType?.includes('testnet') ? 'testnets/' : '';
       const client = new ChainRegistryClient({
         chainNames: [this.chainName],
-        baseUrl: IBC_USE_GITHUB_API ? undefined : PINGPUB_API_URL,
+        baseUrl: IBC_USE_GITHUB_API ? undefined : new URL(`${prefix}`, PINGPUB_API_URL + '/').toString(),
       });
       this.fetchIBCUrls().then((res) => {
         res.forEach((element: any) => {
@@ -67,7 +68,7 @@ export const useIBCModule = defineStore('module-ibc', {
       });
     },
     async fetchIBCUrls(): Promise<any[]> {
-      const prefix = this.chainName.includes('testnet') ? 'testnets/' : '';
+      const prefix = this.chain.current?.networkType?.includes('testnet') ? 'testnets/' : '';
       const ibcEndpoint = new URL(`${prefix}_IBC`, IBC_API_URL + '/').toString();
       console.log('Fetching IBC URLs from:', IBC_API_URL);
       let entries = await fetch(ibcEndpoint)

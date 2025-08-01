@@ -32,13 +32,7 @@ const addFavor = (e: Event) => {
       <span :style="`color: ${conf?.themeColor}`">
         <span class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[10px] uppercase bg-base-200">
           {{
-            name.match('mainnet')
-              ? 'mainnet'
-              : name.match('testnet')
-              ? 'testnet'
-              : name.match('devnet')
-              ? 'devnet'
-              : name
+            conf.networkType || "mainnet"
           }}
         </span>
       </span>

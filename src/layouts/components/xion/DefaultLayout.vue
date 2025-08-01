@@ -11,7 +11,12 @@ import { useDashboard, useBaseStore, useBlockchain } from '@/stores';
 
 import NavBarI18n from '@/layouts/components/NavBarI18n.vue';
 import NavBarWallet from '@/layouts/components/NavBarWallet.vue';
-import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@/layouts/types';
+import type {
+  NavGroup,
+  NavLink,
+  NavSectionTitle,
+  VerticalNavItems,
+} from '@/layouts/types';
 import dayjs from 'dayjs';
 
 const dashboard = useDashboard();
@@ -54,7 +59,9 @@ function isNavTitle(nav: VerticalNavItems | any): nav is NavSectionTitle {
 }
 function selected(route: any, nav: NavLink) {
   const b =
-    route.path === nav.to?.path || (route.path.startsWith(nav.to?.path) && nav.title.indexOf('dashboard') === -1);
+    route.path === nav.to?.path ||
+    (route.path.startsWith(nav.to?.path) &&
+      nav.title.indexOf('dashboard') === -1);
   return b;
 }
 const blocktime = computed(() => {
@@ -83,22 +90,21 @@ dayjs();
             class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[12px] uppercase bg-base-200"
             :style="`color: ${blockchain.current?.themeColor}`"
           >
-            {{
-              blockchain.current?.chainName.match('mainnet')
-                ? 'mainnet'
-                : blockchain.current?.chainName.match('testnet')
-                ? 'testnet'
-                : blockchain.current?.chainName.match('devnet')
-                ? 'devnet'
-                : blockchain.current?.chainName
-            }}
+            {{ blockchain.current?.networkType || 'mainnet' }}
           </span>
         </RouterLink>
-        <div class="pr-4 cursor-pointer xl:!hidden" @click="sidebarShow = false">
+        <div
+          class="pr-4 cursor-pointer xl:!hidden"
+          @click="sidebarShow = false"
+        >
           <Icon icon="mdi-close" class="text-2xl" />
         </div>
       </div>
-      <div v-for="(item, index) of blockchain.computedChainMenu" :key="index" class="px-2">
+      <div
+        v-for="(item, index) of blockchain.computedChainMenu"
+        :key="index"
+        class="px-2"
+      >
         <div
           v-if="isNavGroup(item)"
           :tabindex="index"
@@ -110,7 +116,10 @@ dayjs();
           }"
         >
           <div class="collapse-content">
-            <div v-for="(el, key) of item?.children" class="menu bg-base-100 w-full !p-0">
+            <div
+              v-for="(el, key) of item?.children"
+              class="menu bg-base-100 w-full !p-0"
+            >
               <RouterLink
                 v-if="isNavLink(el)"
                 @click="sidebarShow = false"
@@ -125,7 +134,9 @@ dayjs();
                   icon="mdi:chevron-right"
                   class="mr-2 ml-3"
                   :class="{
-                    'text-white': $route.path === el?.to?.path && item?.title !== 'Favorite',
+                    'text-white':
+                      $route.path === el?.to?.path &&
+                      item?.title !== 'Favorite',
                   }"
                 />
                 <img
@@ -169,22 +180,36 @@ dayjs();
             :src="item?.icon?.image"
             class="w-6 h-6 rounded-full mr-3 border border-blue-100"
           />
-          <div class="text-base capitalize flex-1 text-gray-700 dark:text-gray-200 whitespace-nowrap">
+          <div
+            class="text-base capitalize flex-1 text-gray-700 dark:text-gray-200 whitespace-nowrap"
+          >
             {{ item?.title }}
           </div>
-          <div v-if="item?.badgeContent" class="badge badge-sm text-white border-none" :class="item?.badgeClass">
+          <div
+            v-if="item?.badgeContent"
+            class="badge badge-sm text-white border-none"
+            :class="item?.badgeClass"
+          >
             {{ item?.badgeContent }}
           </div>
         </RouterLink>
-        <div v-if="isNavTitle(item)" class="px-4 text-sm text-gray-400 pb-2 uppercase">
+        <div
+          v-if="isNavTitle(item)"
+          class="px-4 text-sm text-gray-400 pb-2 uppercase"
+        >
           {{ item?.heading }}
         </div>
       </div>
     </div>
     <div class="xl:!ml-64 px-3 pt-4">
       <!-- header -->
-      <div class="flex items-center py-3 bg-base-100 mb-4 rounded px-4 sticky top-0 z-10">
-        <div class="text-2xl pr-3 cursor-pointer xl:!hidden" @click="sidebarShow = true">
+      <div
+        class="flex items-center py-3 bg-base-100 mb-4 rounded px-4 sticky top-0 z-10"
+      >
+        <div
+          class="text-2xl pr-3 cursor-pointer xl:!hidden"
+          @click="sidebarShow = true"
+        >
           <Icon icon="mdi-menu" />
         </div>
 
@@ -216,7 +241,11 @@ dayjs();
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <span>{{ $t('pages.out_of_sync') }} {{ blocktime.format() }} ({{ blocktime.fromNow() }})</span>
+            <span
+              >{{ $t('pages.out_of_sync') }} {{ blocktime.format() }} ({{
+                blocktime.fromNow()
+              }})</span
+            >
           </div>
         </div>
         <RouterView v-slot="{ Component }">

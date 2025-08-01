@@ -45,6 +45,7 @@ export function convertFromLocal(lc: LocalChainConfig): ChainConfig {
   conf.bech32Prefix = lc.addr_prefix;
   conf.bech32ConsensusPrefix = lc.consensus_prefix ?? lc.addr_prefix + 'valcons';
   conf.chainName = lc.chain_name;
+  conf.networkType = lc.network_type;
   conf.coinType = lc.coin_type;
   conf.prettyName = lc.registry_name || lc.chain_name;
   conf.endpoints = {
@@ -74,6 +75,7 @@ export function convertFromDirectory(source: DirectoryChainConfig): ChainConfig 
     (conf.chainId = source.chain_id),
     (conf.chainName = source.chain_name),
     (conf.prettyName = source.pretty_name),
+    (conf.networkType = source.network_type),
     (conf.versions = {
       application: source.versions?.application_version || '',
       cosmosSdk: source.versions?.cosmos_sdk_version || '',
@@ -138,7 +140,7 @@ export enum LoadingStatus {
 
 export const useDashboard = defineStore('dashboard', {
   state: () => {
-    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"cosmos":true, "osmosis":true}');
+    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"xion":true, "xiontestnet2":true}');
     return {
       status: LoadingStatus.Empty,
       source: ConfigSource.MainnetCosmosDirectory,
@@ -205,10 +207,13 @@ export const useDashboard = defineStore('dashboard', {
       }
       const source: Record<string, LocalChainConfig> =
         this.networkType === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+          ? import.meta.glob('../../../chains/xion/*.json', { eager: true })
+          : import.meta.glob('../../../chains/xion/*.json', { eager: true });
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         this.chains[x.chain_name] = convertFromLocal(x);
+        if (!this.chains[x.chain_name].networkType) {
+          this.chains[x.chain_name].networkType = this.networkType;
+        }
       });
       this.setupDefault();
       this.status = LoadingStatus.Loaded;
@@ -217,10 +222,13 @@ export const useDashboard = defineStore('dashboard', {
       const config: Record<string, ChainConfig> = {};
       const source: Record<string, LocalChainConfig> =
         network === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+          ? import.meta.glob('../../../chains/xion/*.json', { eager: true })
+          : import.meta.glob('../../../chains/xion/*.json', { eager: true });
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         config[x.chain_name] = convertFromLocal(x);
+        if (!config[x.chain_name].networkType) {
+          config[x.chain_name].networkType = network.toLowerCase();
+        }
       });
       return config;
     },
