@@ -212,7 +212,7 @@ export const useDashboard = defineStore('dashboard', {
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         this.chains[x.chain_name] = convertFromLocal(x);
         if (!this.chains[x.chain_name].networkType) {
-          this.chains[x.chain_name].networkType = this.networkType;
+          this.chains[x.chain_name].networkType = this.networkType.toString().toLowerCase();
         }
       });
       this.setupDefault();
@@ -227,7 +227,7 @@ export const useDashboard = defineStore('dashboard', {
       Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
         config[x.chain_name] = convertFromLocal(x);
         if (!config[x.chain_name].networkType) {
-          config[x.chain_name].networkType = network.toLowerCase();
+          config[x.chain_name].networkType = network.toString().toLowerCase();
         }
       });
       return config;
