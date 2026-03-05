@@ -49,4 +49,4 @@ USER burnt
 
 EXPOSE 3000
 
-CMD [ "wrangler", "dev", "--assets=/app", "--show-interactive-dev-session", "false", "--ip", "0.0.0.0", "--port", "5173" ]
+CMD [ "wrangler", "dev", "--assets=/app", "--show-interactive-dev-session", "false", "--ip", "0.0.0.0", "--port", "3000" ]
