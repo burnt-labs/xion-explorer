@@ -25,7 +25,7 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn type-check
-      - run: yarn build
+      - run: yarn build-only
       - name: Upload preview version
         id: preview
         uses: cloudflare/wrangler-action@v3

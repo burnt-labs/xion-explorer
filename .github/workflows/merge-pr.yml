@@ -22,7 +22,7 @@ jobs:
           cache: yarn
       - run: yarn install --frozen-lockfile
       - run: yarn type-check
-      - run: yarn build
+      - run: yarn build-only
 
   deploy:
     needs: check
