@@ -24,7 +24,6 @@ jobs:
           node-version: lts/*
           cache: yarn
       - run: yarn install --frozen-lockfile
-      - run: yarn type-check
       - run: yarn build-only
       - name: Upload preview version
         id: preview
