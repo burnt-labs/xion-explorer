@@ -13,6 +13,14 @@ permissions:
 
 jobs:
   preview:
+    # Skip PRs from forks: GitHub does not supply repository secrets to
+    # fork-triggered workflows, so the cloudflare/wrangler-action step
+    # would fail trying to read BURNT_CLOUDFLARE_API_TOKEN /
+    # BURNT_CLOUDFLARE_ACCOUNT_ID. The workflow_dispatch path is
+    # unaffected (no PR context).
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     environment:
       name: preview

@@ -11,8 +11,14 @@ permissions:
   deployments: write
 
 jobs:
+  # No actor guard on this job: this repo has no bump-version.yml flow,
+  # so no github-actions[bot] pushes to xion/main are expected. The
+  # original `if: github.actor != 'github-actions[bot]'` was cargo-culted
+  # from repos that DO have a bump-version flow, and had the side effect
+  # of skipping deploy too (deploy has needs:check, and a skipped need
+  # cascades to dependents). If a bot push ever lands here — renovate
+  # merge, dependabot, etc. — we want CI + deploy to run on it.
   check:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
