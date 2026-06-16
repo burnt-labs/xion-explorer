@@ -150,9 +150,8 @@ export const useBlockchain = defineStore('blockchain', {
       } else {
         const all = this.current?.endpoints?.rest;
         if (all) {
-          const rn = Math.random();
-          const endpoint = all[Math.floor(rn * all.length)];
-          return endpoint;
+          // Default to the primary (first) endpoint instead of a random one
+          return all[0];
         }
       }
     },

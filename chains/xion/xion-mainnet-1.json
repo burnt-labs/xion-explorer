@@ -1,10 +1,14 @@
 {
-  "chain_name": "xion",
+  "chain_name": "verona",
   "chain_id": "xion-mainnet-1",
   "registry_name": "xion",
   "coingecko": "xion",
   "network_type": "mainnet",
   "rpc": [
+    {
+      "address": "https://xion-rpc.polkachu.com",
+      "provider": "Polkachu"
+    },
     {
       "address": "https://rpc.xion-mainnet-1.burnt.com",
       "provider": "🔥BurntLabs🔥"
@@ -12,13 +16,13 @@
     {
       "address": "https://rpc-burnt.imperator.co/",
       "provider": "Imperator.co"
-    },
-    {
-      "address": "https://xion-rpc.polkachu.com",
-      "provider": "Polkachu"
     }
   ],
   "api": [
+    {
+      "address": "https://xion-api.polkachu.com",
+      "provider": "Polkachu"
+    },
     {
       "address": "https://api.xion-mainnet-1.burnt.com",
       "provider": "🔥BurntLabs🔥"
@@ -26,10 +30,6 @@
     {
       "address": "https://lcd-burnt.imperator.co/",
       "provider": "Imperator.co"
-    },
-    {
-      "address": "https://xion-api.polkachu.com",
-      "provider": "Polkachu"
     }
   ],
   "snapshot_provider": "",
@@ -38,14 +38,14 @@
   "min_tx_fee": "100",
   "addr_prefix": "xion",
   "theme_color": "#96b325",
-  "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/xion/images/burnt-round.png",
+  "logo": "/verona.png",
   "assets": [
     {
       "base": "uxion",
-      "symbol": "XION",
+      "symbol": "VERONA",
       "exponent": "6",
       "coingecko_id": "xion-2",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/xion/images/burnt-round.png"
+      "logo": "/verona.png"
     },
     {
       "base": "ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B",
@@ -146,5 +146,9 @@
     "parameters",
     "account"
   ],
-  "keplr_features": ["ibc-go", "ibc-transfer", "no-legacy-stdTx"]
+  "keplr_features": [
+    "ibc-go",
+    "ibc-transfer",
+    "no-legacy-stdTx"
+  ]
 }

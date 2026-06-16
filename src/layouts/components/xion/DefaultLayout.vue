@@ -85,7 +85,7 @@ dayjs();
     >
       <div class="flex justify-between mt-1 pl-4 py-4 mb-1">
         <RouterLink to="/" class="flex items-center">
-          <img class="w-20 h-10" src="/src/assets/images/xion-logo.svg" />
+          <img class="h-6 w-auto max-w-[150px] object-contain" src="/src/assets/images/verona-logo-full.svg" />
           <span
             class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[12px] uppercase bg-base-200"
             :style="`color: ${blockchain.current?.themeColor}`"

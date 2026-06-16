@@ -26,7 +26,7 @@ const addFavor = (e: Event) => {
     class="bg-base-100 hover:bg-gray-100 dark:hover:bg-[#373f59] rounded shadow flex items-center px-3 py-3 cursor-pointer"
   >
     <div>
-      <img class="w-12 h-7" src="/src/assets/images/xion-logo.svg" />
+      <img class="h-7 w-auto object-contain" src="/src/assets/images/verona-logo-full.svg" />
     </div>
     <div class="font-semibold ml-4 text-base flex-1 truncate capitalize">
       <span :style="`color: ${conf?.themeColor}`">
