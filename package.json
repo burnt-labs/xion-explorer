@@ -17,10 +17,10 @@
     "@chain-registry/types": "^0.50.184",
     "@chenfengyuan/vue-countdown": "2",
     "@cosmjs/amino": "^0.32.3",
+    "@cosmjs/cosmwasm-stargate": "^0.30.0",
     "@cosmjs/crypto": "^0.32.3",
     "@cosmjs/encoding": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
-    "@cosmjs/cosmwasm-stargate": "^0.30.0",
     "@iconify/vue": "^4.1.0",
     "@intlify/unplugin-vue-i18n": "^0.8.2",
     "@leapwallet/cosmos-snap-provider": "^0.1.20",
@@ -83,7 +83,7 @@
     "vite-plugin-pages": "^0.28.0",
     "vue-json-viewer": "3",
     "vue-tsc": "^1.0.12",
-    "wrangler": "^4.14.7"
+    "wrangler": "^4.93.0"
   },
   "husky": {
     "hooks": {

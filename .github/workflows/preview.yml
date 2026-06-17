@@ -1,0 +1,154 @@
+name: Preview
+
+on:
+  pull_request:
+    branches: [xion/main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  preview:
+    # Skip PRs from forks: GitHub does not supply repository secrets to
+    # fork-triggered workflows, so the cloudflare/wrangler-action step
+    # would fail trying to read BURNT_CLOUDFLARE_API_TOKEN /
+    # BURNT_CLOUDFLARE_ACCOUNT_ID. The workflow_dispatch path is
+    # unaffected (no PR context).
+    if: |
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: ${{ steps.extract.outputs.preview_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn build-only
+      - name: Upload preview version
+        id: preview
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload --message "PR preview ${{ github.sha }}"
+          packageManager: yarn
+      - name: Extract version ID and preview URL
+        id: extract
+        env:
+          OUTPUT: ${{ steps.preview.outputs.command-output }}
+        run: |
+          VERSION_ID=$(echo "$OUTPUT" | grep -oP 'Version ID:\s+\K[a-f0-9-]+' || echo '')
+          PREVIEW_URL=$(echo "$OUTPUT" | grep -oP 'https://[^\s]+\.workers\.dev[^\s]*' | head -1 || echo '')
+
+          if [ -z "$PREVIEW_URL" ] && [ -n "$VERSION_ID" ]; then
+            SHORT_VERSION_ID=$(echo "$VERSION_ID" | cut -d'-' -f1)
+            PREVIEW_URL="https://${SHORT_VERSION_ID}-xion-explorer.burnt.workers.dev"
+          fi
+
+          echo "version_id=${VERSION_ID:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+      - name: Surface preview URL on commit and PR
+        if: steps.extract.outputs.preview_url != ''
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.extract.outputs.preview_url }}`
+            const versionId = `${{ steps.extract.outputs.version_id }}`
+            const pr = context.payload.pull_request
+            const sha = pr?.head?.sha ?? context.sha
+            const marker = `<!-- explorer-preview:${sha} -->`
+            core.info(`event: ${context.eventName}, sha: ${sha}, pr: ${pr?.number ?? 'none'}, url: ${url}`)
+            const body = [
+              marker,
+              `### Explorer preview ready`,
+              ``,
+              `- Preview: ${url}`,
+              `- Version: \`${versionId}\``,
+              ``,
+              `Versioned worker URL. Canonical \`explorer.burnt.com\` / \`explorer.{mainnet,testnet}.burnt.com\` traffic is unchanged until the PR merges.`,
+            ].join('\n')
+
+            async function upsertCommitComment(commitSha) {
+              try {
+                const { data: existing } = await github.rest.repos.listCommentsForCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: commitSha,
+                  per_page: 100,
+                })
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  await github.rest.repos.updateCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  await github.rest.repos.createCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    commit_sha: commitSha,
+                    body,
+                  })
+                }
+              } catch (err) {
+                core.warning(`upsertCommitComment failed: ${err.status} ${err.message}`)
+              }
+            }
+
+            async function upsertPrComment(prNumber) {
+              try {
+                const { data: existing } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  per_page: 100,
+                })
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    body,
+                  })
+                }
+              } catch (err) {
+                core.warning(`upsertPrComment failed: ${err.status} ${err.message}`)
+              }
+            }
+
+            await upsertCommitComment(sha)
+
+            let prNumbers = []
+            if (pr) {
+              prNumbers = [pr.number]
+            } else {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: sha,
+              })
+              prNumbers = prs.filter((p) => p.state === 'open').map((p) => p.number)
+            }
+            for (const prNumber of prNumbers) {
+              await upsertPrComment(prNumber)
+            }
