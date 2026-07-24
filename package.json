@@ -82,7 +82,6 @@
     "unplugin-vue-define-options": "1.1.4",
     "vite": "^4.4.9",
     "vite-plugin-pages": "^0.28.0",
-    "vue-json-viewer": "3",
     "vue-tsc": "^3.3.8",
     "wrangler": "^4.93.0"
   },
