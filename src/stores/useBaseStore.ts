@@ -6,8 +6,9 @@ import type { Block } from '@/types';
 import { hashTx } from '@/libs';
 import { fromBase64 } from '@cosmjs/encoding';
 
-const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS || false;
-const RECENT_BLOCKS_LIMIT = import.meta.env.VITE_RECENT_BLOCK_LIMIT || 50;
+// Vite exposes env vars as strings, so `"false"` would be truthy here — compare explicitly.
+const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS === 'true';
+const RECENT_BLOCKS_LIMIT = Number(import.meta.env.VITE_RECENT_BLOCK_LIMIT) || 50;
 
 export const useBaseStore = defineStore('baseStore', {
   state: () => {
@@ -79,11 +80,18 @@ export const useBaseStore = defineStore('baseStore', {
     async fetchLatest() {
       if (!this.hasRpc) return this.latest;
       try {
-        this.latest = await this.blockchain.rpc?.getBaseBlockLatest();
+        const latest = await this.blockchain.rpc?.getBaseBlockLatest();
+        // A malformed 200 (error body, rate-limit page) would otherwise be stored as
+        // `latest`, whose missing chain_id then wipes `earliest`/`recents` below and
+        // resets the average block time. Treat it as a failed poll instead.
+        if (!latest?.block?.header?.height) throw new Error('malformed blocks/latest payload');
+        this.latest = latest;
         this.connected = true;
+        this.blockchain.notePollResult?.(true);
       } catch (error) {
         console.error('Error fetching latest block:', error);
         this.connected = false;
+        await this.blockchain.notePollResult?.(false);
       }
       if (!this.earliest || this.earliest?.block?.header?.chain_id != this.latest?.block?.header?.chain_id) {
         //reset earliest and recents
