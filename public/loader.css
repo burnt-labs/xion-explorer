@@ -1,5 +1,5 @@
 #loading-bg {
-  background: var(--initial-loader-bg, #fff);
+  background: var(--initial-loader-bg, #101834); /* deep Sea */
 }
 
 .loading-logo {
@@ -26,7 +26,7 @@
   box-sizing: border-box;
   border: 3px solid transparent;
   block-size: 100%;
-  border-inline-start: 3px solid var(--initial-loader-color, #eee);
+  border-inline-start: 3px solid var(--initial-loader-color, #4cb1df); /* Sky */
   border-radius: 50%;
   inline-size: 100%;
 }

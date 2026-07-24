@@ -37,7 +37,7 @@
   "coin_type": "118",
   "min_tx_fee": "100",
   "addr_prefix": "xion",
-  "theme_color": "#96b325",
+  "theme_color": "#4CB1DF",
   "logo": "/verona.png",
   "assets": [
     {
@@ -46,6 +46,12 @@
       "exponent": "6",
       "coingecko_id": "xion-2",
       "logo": "/verona.png"
+    },
+    {
+      "base": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc",
+      "symbol": "SBC",
+      "exponent": "6",
+      "logo": "https://brale.network/logos/valuetype/sbc.svg"
     },
     {
       "base": "ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B",
@@ -59,7 +65,7 @@
       "symbol": "USDC",
       "exponent": "6",
       "coingecko_id": "usd-coin",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/noble/images/USDCoin.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.png"
     },
     {
       "base": "ibc/CC7B293B3F08EA7DB96AFD4765BD0C7F95ABD7ECEAF21C74F3ACCBF7CEFB6591",
@@ -80,28 +86,28 @@
       "symbol": "axlUSDC",
       "exponent": "6",
       "coingecko_id": "usd-coin",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/axlusdc.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/usdc.png"
     },
     {
       "base": "ibc/0000000000000000000000000000000000000000000000000000000000000000",
       "symbol": "axlUSDT",
       "exponent": "6",
       "coingecko_id": "tether",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/axlusdc.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdt.png"
     },
     {
       "base": "ibc/0000000000000000000000000000000000000000000000000000000000000000",
       "symbol": "axlDAI",
       "exponent": "18",
       "coingecko_id": "dai",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/axldai.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/dai.png"
     },
     {
       "base": "ibc/0000000000000000000000000000000000000000000000000000000000000000",
       "symbol": "axlFRAX",
       "exponent": "6",
       "coingecko_id": "frax",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/axelar/images/axlfrax.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/frax.svg"
     },
     {
       "base": "ibc/AAD7136DD626569C3DDE7C5F764968BB2E939875EFC568AE5712B62081850814",
