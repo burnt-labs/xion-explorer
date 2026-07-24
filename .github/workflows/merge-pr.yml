@@ -1,0 +1,36 @@
+name: Merge PR
+
+on:
+  push:
+    branches: [xion/main]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  deployments: write
+
+jobs:
+  # No actor guard on this job: this repo has no bump-version.yml flow,
+  # so no github-actions[bot] pushes to xion/main are expected. The
+  # original `if: github.actor != 'github-actions[bot]'` was cargo-culted
+  # from repos that DO have a bump-version flow, and had the side effect
+  # of skipping deploy too (deploy has needs:check, and a skipped need
+  # cascades to dependents). If a bot push ever lands here — renovate
+  # merge, dependabot, etc. — we want CI + deploy to run on it.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn type-check
+      - run: yarn build-only
+
+  deploy:
+    needs: check
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

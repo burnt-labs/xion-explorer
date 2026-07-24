@@ -2,8 +2,8 @@ import type { Asset as RegistryAsset, DenomUnit as RegistryDenomUnit } from '@ch
 import type { Chain as RegistryChain, Endpoint as RegistryEndPoint } from '@chain-registry/types/chain.schema';
 
 export enum NetworkType {
-  Mainnet,
-  Testnet,
+  Mainnet = 'mainnet',
+  Testnet = 'testnet',
 }
 
 export enum ConfigSource {

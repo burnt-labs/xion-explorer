@@ -96,9 +96,11 @@ export const useBaseStore = defineStore('baseStore', {
         }
         this.latest = latest;
         this.connected = true;
+        this.blockchain.notePollResult?.(true);
       } catch (error) {
         console.error('Error fetching latest block:', error);
         this.connected = false;
+        await this.blockchain.notePollResult?.(false);
       }
       if (!this.earliest || this.earliest?.block?.header?.chain_id != this.latest?.block?.header?.chain_id) {
         //reset earliest and recents
