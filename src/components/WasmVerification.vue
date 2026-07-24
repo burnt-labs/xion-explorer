@@ -248,7 +248,6 @@ function callFunction(title: string, method: string, arg: Argument) {
                     :theme="baseStore.theme || 'dark'"
                     style="background: transparent"
                     copyable
-                    boxed
                     sort
                     :expand-depth="5"
                   />

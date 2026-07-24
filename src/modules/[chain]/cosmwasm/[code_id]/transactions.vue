@@ -203,7 +203,6 @@ const tab = ref('detail');
             :theme="baseStore.theme || 'dark'"
             style="background: transparent"
             copyable
-            boxed
             sort
             :expand-depth="5"
           />
@@ -346,7 +345,6 @@ const tab = ref('detail');
         :theme="baseStore.theme"
         style="background: transparent"
         copyable
-        boxed
         sort
         :expand-depth="5"
       />

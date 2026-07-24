@@ -113,3 +113,22 @@ h2,
   opacity: 0;
   transform: translateY(-calc(15%));
 }
+
+/* vue3-json-viewer clips its tree: .jv-code sets overflow:hidden and the `boxed`
+   variant caps it at 300px, so a large transaction renders a ~35,000px tree inside
+   a few hundred pixels with no way to reach the rest. Give it a bounded viewport
+   that scrolls instead, and drop the fade-out overlay that implied expandability.
+
+   The class is doubled to raise specificity: the library's stylesheet is imported
+   from the components, so it lands in a route chunk that loads after this file and
+   would otherwise win on equal specificity. */
+.jv-container.jv-container .jv-code {
+  min-height: 12rem;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 12px 16px;
+}
+
+.jv-container.jv-container .jv-more {
+  display: none;
+}
