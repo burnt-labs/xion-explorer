@@ -86,7 +86,7 @@ onMounted(() => {
           viewBox="0 0 150.000000 132.000000"
           preserveAspectRatio="xMidYMid meet"
         >
-          <g transform="translate(0.000000,132.000000) scale(0.100000,-0.100000)" fill="#666CFF" class="" stroke="none">
+          <g transform="translate(0.000000,132.000000) scale(0.100000,-0.100000)" fill="currentColor" class="text-primary" stroke="none">
             <path
               d="M500 1310 l-125 -5 -182 -315 c-100 -173 -182 -321 -182 -329 -1 -7
             81 -159 181 -337 l183 -324 372 0 371 0 186 325 c102 179 186 330 186 337 0 7
@@ -133,10 +133,10 @@ onMounted(() => {
         <span class="text-base"> 1. Submit chain configuration</span>
         <div class="mockup-code bg-base-200 my-2 gap-4">
           <div v-for="it in checklist">
-            <pre><code class="text-gray-800 dark:invert">{{ it.title }}: </code>{{ it.status ? '✅' : '❌' }} </pre>
+            <pre><code class="text-base-content dark:invert">{{ it.title }}: </code>{{ it.status ? '✅' : '❌' }} </pre>
           </div>
 
-          <pre class="text-xs text-red-500">{{ configChecker }}</pre>
+          <pre class="text-xs text-error">{{ configChecker }}</pre>
           <pre></pre>
           <a
             class="btn-ghost text-white rounded-md p-2 ml-4"
@@ -147,10 +147,10 @@ onMounted(() => {
 
         <span class="text-base"> 2. Fund the faucet account</span>
         <div class="mockup-code bg-base-200 my-2">
-          <pre data-prefix=">"><code class=" text-gray-800 dark:invert"> Faucet Address: {{ faucet }} </code></pre>
+          <pre data-prefix=">"><code class=" text-base-content dark:invert"> Faucet Address: {{ faucet }} </code></pre>
           <pre
             data-prefix=">"
-          ><code class="text-gray-800 dark:invert"> Balances: {{ format.formatTokens(balances) }} </code></pre>
+          ><code class="text-base-content dark:invert"> Balances: {{ format.formatTokens(balances) }} </code></pre>
         </div>
       </div>
     </div>
@@ -158,11 +158,11 @@ onMounted(() => {
     <div class="modal" role="dialog">
       <div class="modal-box">
         <div v-if="ret.status === 'error'">
-          <h3 class="font-bold text-red-500">Error</h3>
+          <h3 class="font-bold text-error">Error</h3>
           <div>{{ ret.message }}</div>
         </div>
         <div v-else-if="ret.status === 'ok'">
-          <h3 class="font-bold text-green-500">Token Sent!</h3>
+          <h3 class="font-bold text-success">Token Sent!</h3>
           <div class="text-center mt-4">
             <RouterLink :to="`/${chainStore.chainName}/tx/${ret.result.txhash}`">View Transaction</RouterLink>
           </div>

@@ -37,7 +37,7 @@
   "coin_type": "118",
   "min_tx_fee": "100",
   "addr_prefix": "xion",
-  "theme_color": "#ffaa4a",
+  "theme_color": "#BEA64D",
   "logo": "/verona.png",
   "assets": [
     {
@@ -46,6 +46,12 @@
       "exponent": "6",
       "coingecko_id": "xion-2",
       "logo": "/verona.png"
+    },
+    {
+      "base": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc",
+      "symbol": "SBC",
+      "exponent": "6",
+      "logo": "https://brale.network/logos/valuetype/sbc.svg"
     },
     {
       "base": "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B",
@@ -59,14 +65,14 @@
       "symbol": "USDC",
       "exponent": "6",
       "coingecko_id": "usd-coin",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/noble/images/USDCoin.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.png"
     },
     {
       "base": "ibc/2DD421C34C750BA522D4C8A6657DE220ED7874EF32B56C0791660149B8A51ED4",
       "symbol": "USDC",
       "exponent": "6",
       "coingecko_id": "usd-coin",
-      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/noble/images/USDCoin.png"
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.png"
     }
   ],
   "features": [

@@ -8,6 +8,8 @@ import NavbarSearch from '@/layouts/components/NavbarSearch.vue';
 import ChainProfile from '@/layouts/components/ChainProfile.vue';
 
 import { useDashboard, useBaseStore, useBlockchain } from '@/stores';
+// Imported so Vite fingerprints it; a literal "/src/assets/..." src 404s in a build.
+import veronaLogo from '@/assets/images/verona-logo-full.svg';
 
 import NavBarI18n from '@/layouts/components/NavBarI18n.vue';
 import NavBarWallet from '@/layouts/components/NavBarWallet.vue';
@@ -37,6 +39,17 @@ blockchain.$subscribe((m, s) => {
     blockchain.randomSetupEndpoint();
   }
 });
+
+// The chain accent (Sky/Gold) is too light for text on Linen, so the network
+// reads as a tinted chip: accent-tinted background, ink text on light, accent
+// text on dark - mirroring app.burnt.com's ACTIVE badge.
+function accentTint(hex?: string, alpha = 0.16) {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex?.trim() || '');
+  if (!m) return 'hsl(var(--b2))';
+  const h = m[1].length === 3 ? m[1].split('').map((c) => c + c).join('') : m[1];
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
 
 const sidebarShow = ref(false);
 const sidebarOpen = ref(true);
@@ -77,18 +90,19 @@ dayjs();
 </script>
 
 <template>
-  <div class="bg-gray-100 dark:bg-black">
+  <div class="bg-base-200 dark:bg-base-300">
     <!-- sidebar -->
     <div
       class="w-64 fixed z-50 left-0 top-0 bottom-0 overflow-auto bg-base-100 border-r border-gray-100 dark:border-gray-700"
       :class="{ block: sidebarShow, 'hidden xl:!block': !sidebarShow }"
     >
       <div class="flex justify-between mt-1 pl-4 py-4 mb-1">
-        <RouterLink to="/" class="flex items-center">
-          <img class="h-6 w-auto max-w-[150px] object-contain" src="/src/assets/images/verona-logo-full.svg" />
+        <RouterLink to="/" class="flex flex-col items-start gap-[3px]">
+          <img class="h-6 w-auto max-w-[150px] object-contain invert dark:invert-0" :src="veronaLogo" alt="Verona" />
+          <!-- network reads as an eyebrow under the wordmark rather than crowding it -->
           <span
-            class="ml-[8px] translate-y-[4px] rounded-[4px] p-[4px] text-[12px] uppercase bg-base-200"
-            :style="`color: ${blockchain.current?.themeColor}`"
+            class="font-hedvig-sans text-[10px] uppercase tracking-[0.18em] leading-none rounded px-[6px] py-[3px] text-base-content dark:text-[color:var(--net-accent)]"
+            :style="`--net-accent: ${blockchain.current?.themeColor}; background-color: ${accentTint(blockchain.current?.themeColor)}`"
           >
             {{ blockchain.current?.networkType || 'mainnet' }}
           </span>
@@ -123,7 +137,7 @@ dayjs();
               <RouterLink
                 v-if="isNavLink(el)"
                 @click="sidebarShow = false"
-                class="hover:bg-gray-100 dark:hover:bg-[#373f59] rounded cursor-pointer px-3 py-2 flex items-center"
+                class="hover:bg-active rounded cursor-pointer px-3 py-2 flex items-center"
                 :class="{
                   '!bg-primary': selected($route, el),
                 }"
@@ -148,7 +162,7 @@ dayjs();
                   }"
                 />
                 <div
-                  class="text-base capitalize text-gray-500 dark:text-gray-300"
+                  class="text-base capitalize text-base-content"
                   :class="{
                     '!text-white': selected($route, el),
                   }"
@@ -164,14 +178,14 @@ dayjs();
           v-if="isNavLink(item)"
           :to="item?.to"
           @click="sidebarShow = false"
-          class="cursor-pointer rounded-lg px-4 flex items-center py-2 hover:bg-gray-100 dark:hover:bg-[#373f59]"
+          class="cursor-pointer rounded-lg px-4 flex items-center py-2 hover:bg-active"
         >
           <Icon
             v-if="item?.icon?.icon"
             :icon="item?.icon?.icon"
             class="text-xl mr-2"
             :class="{
-              'text-yellow-500': item?.title === 'Favorite',
+              'text-warning': item?.title === 'Favorite',
               'text-blue-500': item?.title !== 'Favorite',
             }"
           />
@@ -181,7 +195,7 @@ dayjs();
             class="w-6 h-6 rounded-full mr-3 border border-blue-100"
           />
           <div
-            class="text-base capitalize flex-1 text-gray-700 dark:text-gray-200 whitespace-nowrap"
+            class="text-base capitalize flex-1 text-base-content whitespace-nowrap"
           >
             {{ item?.title }}
           </div>
@@ -195,7 +209,7 @@ dayjs();
         </RouterLink>
         <div
           v-if="isNavTitle(item)"
-          class="px-4 text-sm text-gray-400 pb-2 uppercase"
+          class="px-4 text-sm text-base-content opacity-60 pb-2 uppercase"
         >
           {{ item?.heading }}
         </div>

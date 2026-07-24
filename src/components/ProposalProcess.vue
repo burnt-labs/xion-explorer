@@ -29,11 +29,11 @@ const veto = computed(() => format.calculatePercent(props.tally?.no_with_veto, t
     <div class="h-6 bg-no flex items-center text-white overflow-hidden" :style="`width: ${no}`" :title="no">
       {{ no }}
     </div>
-    <div class="h-6 bg-[#B71C1C] flex items-center text-white overflow-hidden" :style="`width: ${veto};`" :title="veto">
+    <div class="h-6 bg-veto flex items-center text-white overflow-hidden" :style="`width: ${veto};`" :title="veto">
       {{ veto }}
     </div>
     <div
-      class="h-6 bg-secondary flex items-center text-white overflow-hidden"
+      class="h-6 bg-neutral flex items-center text-neutral-content overflow-hidden"
       :style="`width: ${abstain}`"
       :title="abstain"
     >
