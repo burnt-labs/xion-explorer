@@ -33,7 +33,7 @@ jobs:
           VITE_PINGPUB_API_URL: ${{ vars.VITE_PINGPUB_API_URL || 'https://registry.ping.pub' }}
           VITE_IBC_USE_GITHUB_API: ${{ vars.VITE_IBC_USE_GITHUB_API || 'false' }}
       - name: Deploy worker
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
