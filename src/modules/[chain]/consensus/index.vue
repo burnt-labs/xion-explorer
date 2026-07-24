@@ -249,7 +249,7 @@ async function update() {
               style="margin: 2px"
             >
               <span class="flex flex-rows justify-between">
-                <span class="truncate">{{ showName(i, 'nil-Vote') }} </span>
+                <span class="truncate">{{ showName(Number(i), 'nil-Vote') }} </span>
                 <span>
                   <span
                     class="tooltip"
