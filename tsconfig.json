@@ -27,8 +27,7 @@
     "src/**/*.vue",
     "types",
     "components.d.ts",
-    "auto-imports.d.ts",
-    "vue3-json-viewer.d.ts"
+    "auto-imports.d.ts"
   ],
   "exclude": ["src/components/ad/ad.ts"],
   "references": [
