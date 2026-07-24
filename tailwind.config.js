@@ -1,50 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-const plugin = require('tailwindcss/plugin');
-
-// @ping-pub/widget injects its own full Tailwind + daisyUI bundle at runtime,
-// re-declaring :root, [data-theme=light] and [data-theme=dark] with daisyUI's
-// stock palette. Because it lands after our stylesheet it wins on equal
-// specificity, which silently reverts the whole theme. Re-emitting the same
-// tokens under `html[data-theme=...]` (0,1,1) outranks the widget's (0,1,0).
-function hexToHslTriplet(hex) {
-  const h = hex.replace('#', '');
-  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
-  const n = parseInt(full, 16);
-  const r = ((n >> 16) & 255) / 255;
-  const g = ((n >> 8) & 255) / 255;
-  const b = (n & 255) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  let hue = 0;
-  let sat = 0;
-  if (max !== min) {
-    const d = max - min;
-    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    if (max === r) hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-    else if (max === g) hue = ((b - r) / d + 2) * 60;
-    else hue = ((r - g) / d + 4) * 60;
-  }
-  const round = (v) => Math.round(v * 10) / 10;
-  return `${round(hue)} ${round(sat * 100)}% ${round(l * 100)}%`;
-}
-
-const DAISY_VARS = {
-  primary: '--p', 'primary-content': '--pc', secondary: '--s', 'secondary-content': '--sc',
-  accent: '--a', 'accent-content': '--ac', neutral: '--n', 'neutral-content': '--nc',
-  'base-100': '--b1', 'base-200': '--b2', 'base-300': '--b3', 'base-content': '--bc',
-  info: '--in', success: '--su', warning: '--wa', error: '--er',
-};
-
-function themeVars(tokens) {
-  const out = {};
-  for (const [key, value] of Object.entries(tokens)) {
-    if (key.startsWith('--')) out[key] = value;
-    else if (DAISY_VARS[key]) out[DAISY_VARS[key]] = hexToHslTriplet(value);
-  }
-  return out;
-}
-
 
 // Verona brand palette.
 // Source: burnt-labs/verona-website `docs/verona-design-system.md` + `app/globals.css`.
@@ -125,19 +79,7 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require('daisyui'),
-    // must run after daisyui so it lands later in the cascade
-    plugin(({ addBase }) => {
-      const themes = module.exports.daisyui.themes;
-      const base = {};
-      themes.forEach((entry) => {
-        const [name, tokens] = Object.entries(entry)[0];
-        base[`html[data-theme='${name}']`] = themeVars(tokens);
-      });
-      addBase(base);
-    }),
-  ],
+  plugins: [require('daisyui')],
   daisyui: {
     // Named `light`/`dark` so NavbarThemeSwitcher's existing data-theme toggle
     // picks them up with no change to the switcher.
