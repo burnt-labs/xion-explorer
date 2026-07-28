@@ -162,12 +162,12 @@ function fillblock(b: Block, direction: string = 'end') {
     const block = blockColors.value[v.base64] || [];
     let color = {
       height: b.block.header.height,
-      color: 'bg-red-500',
+      color: 'bg-error',
     };
     if (sig) {
       color = {
         height: b.block.header.height,
-        color: sig.block_id_flag === 'BLOCK_ID_FLAG_COMMIT' ? 'bg-green-500' : 'bg-yellow-500',
+        color: sig.block_id_flag === 'BLOCK_ID_FLAG_COMMIT' ? 'bg-success' : 'bg-warning',
       };
     }
     if (direction === 'end') {
@@ -202,14 +202,14 @@ function changeTab(v: string) {
 <template>
   <div>
     <div class="tabs tabs-boxed bg-transparent mb-4">
-      <a class="tab text-gray-400 capitalize" :class="{ 'tab-active': tab === '3' }" @click="changeTab('3')">{{
+      <a class="tab text-base-content/60 capitalize" :class="{ 'tab-active': tab === '3' }" @click="changeTab('3')">{{
         $t('uptime.overall')
       }}</a>
-      <a class="tab text-gray-400 capitalize" :class="{ 'tab-active': tab === '2' }" @click="changeTab('2')">{{
+      <a class="tab text-base-content/60 capitalize" :class="{ 'tab-active': tab === '2' }" @click="changeTab('2')">{{
         $t('module.blocks')
       }}</a>
       <RouterLink :to="`/${chain}/uptime/customize`">
-        <a class="tab text-gray-400 capitalize">{{ $t('uptime.customize') }}</a>
+        <a class="tab text-base-content/60 capitalize">{{ $t('uptime.customize') }}</a>
       </RouterLink>
     </div>
     <div class="bg-base-100 px-5 pt-5">
@@ -234,13 +234,13 @@ function changeTab(v: string) {
               </label>
               <div
                 v-if="Number(unit?.missed_blocks_counter || 0) > 10"
-                class="badge badge-sm bg-transparent border-0 text-red-500 font-bold"
+                class="badge badge-sm bg-transparent border-0 text-error font-bold"
               >
                 {{ unit?.missed_blocks_counter }}
               </div>
               <div
                 v-else
-                class="badge badge-sm bg-transparent text-green-600 border-0 font-bold"
+                class="badge badge-sm bg-transparent text-success border-0 font-bold"
               >
                 {{ unit?.missed_blocks_counter }}
               </div>
@@ -250,10 +250,10 @@ function changeTab(v: string) {
         </div>
         <div class="mt-5 text-xs flex justify-center gap-2">
           <span class="font-bold">{{ $t('uptime.legend') }}: </span>
-          <span class="bg-green-500">&nbsp;</span> {{ $t('uptime.committed') }}
-          <span class="bg-yellow-500">&nbsp;</span>
+          <span class="bg-success">&nbsp;</span> {{ $t('uptime.committed') }}
+          <span class="bg-warning">&nbsp;</span>
           {{ $t('uptime.precommitted') }}
-          <span class="bg-red-500">&nbsp;</span> {{ $t('uptime.missed') }}
+          <span class="bg-error">&nbsp;</span> {{ $t('uptime.missed') }}
         </div>
       </div>
 
@@ -274,7 +274,7 @@ function changeTab(v: string) {
               <div class="truncate max-w-sm">{{ i + 1 }}. {{ v.moniker }}</div>
             </td>
             <td class="text-right">
-              <span :class="v.uptime && v.uptime > 0.95 ? 'text-green-500' : 'text-red-500'">
+              <span :class="v.uptime && v.uptime > 0.95 ? 'text-success' : 'text-error'">
                 <div class="tooltip" :data-tip="`${v.missed_blocks_counter} missing blocks`">
                   {{ format.percent(v.uptime) }}
                 </div>

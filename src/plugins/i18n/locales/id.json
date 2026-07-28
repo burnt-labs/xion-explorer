@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "Lanjutan",
     "dashboard": "Dasbor",
     "blocks": "Kumpulan Blok",
     "staking": "Staking",
@@ -7,7 +8,7 @@
     "parameters": "Parameter",
     "uptime": "Pemantauan",
     "state-sync": "State Sync",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "Kontrak",
     "widget": "Widgets",
     "ibc": "IBC",
     "consensus": "Konsensus",

@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: yarn
@@ -26,7 +26,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build
-        run: yarn build
+      - name: Build mainnet
+        run: yarn build:mainnet
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+
+      - name: Build testnet
+        run: yarn build:testnet
         env:
           NODE_OPTIONS: --max_old_space_size=4096

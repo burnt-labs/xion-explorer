@@ -2,27 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://v1.slise.xyz" crossorigin />
-    <link rel="dns-prefetch" href="https://v1.slise.xyz" />
-    <link rel="preload" href="https://v1.slise.xyz/scripts/embed.js" as="script" />
-    <title>Ping Dashboard - Cosmos Blockchain Explorer And Web Wallet</title>
+    <title>Verona Explorer</title>
     <meta
       name="description"
-      content="Ping Dashboard is a block explorer/web wallet for blockchains built on Cosmos SDK, Cosmoshub, Osmosis, Juno, Evmos, Injective, Canto and 70+ blockchains listed on ping.pub"
+      content="Verona Explorer is a block explorer/web wallet for Verona blockchain networks"
     />
     <link rel="stylesheet" type="text/css" href="/loader.css" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://cdn.jsdelivr.net https://*.ping.pub https://v1.slise.xyz; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https: http: data:; frame-src 'self' https://wallet.keplr.app https://*.slise.xyz; font-src 'self' data: https://fonts.gstatic.com;"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://cdn.jsdelivr.net https://*.ping.pub; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https: http: data:; frame-src 'self' https://wallet.keplr.app; font-src 'self' data: https://fonts.gstatic.com;"
     />
   </head>
+
   <body>
     <div id="app">
       <div id="loading-bg">
         <div class="loading-logo">
-          <img src="/logo.svg" alt="Logo" />
+          <!-- width 150 keeps loader.css's `calc(50% - 75px)` centring correct -->
+          <img src="/verona.png" alt="Verona" width="150" height="150" />
         </div>
         <div class="pre-loading">
           <div class="effect-1 effects"></div>
@@ -33,10 +32,7 @@
     </div>
     <script type="module" src="/src/main.ts"></script>
     <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-SSBKVF3GMX"
-    ></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SSBKVF3GMX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {

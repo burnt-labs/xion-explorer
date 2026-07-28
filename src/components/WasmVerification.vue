@@ -9,7 +9,7 @@ import { useWasmStore } from '@/modules/[chain]/cosmwasm/WasmStore';
 import { toBase64 } from '@cosmjs/encoding';
 import DOMPurify from 'dompurify';
 
-import { JsonViewer } from 'vue3-json-viewer';
+import JsonTree from '@/components/JsonTree.vue';
 import { CosmjsOfflineSigner } from '@leapwallet/cosmos-snap-provider';
 
 interface Verification {
@@ -243,15 +243,7 @@ function callFunction(title: string, method: string, arg: Argument) {
                   <label v-else class="btn btn-sm" @click="callFunction(title, method, props)">{{ method }}</label>
                 </div>
                 <div v-if="result[`${title}-${method}`]" class="mt-2">
-                  <JsonViewer
-                    :value="result[`${title}-${method}`]"
-                    :theme="baseStore.theme || 'dark'"
-                    style="background: transparent"
-                    copyable
-                    boxed
-                    sort
-                    :expand-depth="5"
-                  />
+                  <JsonTree :data="result[`${title}-${method}`]" :deep="2" />
                 </div>
               </div>
             </div>
@@ -282,7 +274,7 @@ function callFunction(title: string, method: string, arg: Argument) {
     </div>
 
     <!-- alert-info -->
-    <div class="text-[#00cfe8] bg-[rgba(0,207,232,0.12)] rounded shadow mt-4 alert-info">
+    <div class="text-info bg-info/10 rounded shadow mt-4 alert-info">
       <div class="drop-shadow-md px-4 pt-2 pb-2" style="box-shadow: rgba(0, 207, 232, 0.4) 0px 6px 15px -7px">
         <h2 class="text-base font-semibold">{{ $t('consensus.tips') }}</h2>
       </div>

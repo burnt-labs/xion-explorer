@@ -1,0 +1,118 @@
+{
+  "chain_name": "verona",
+  "chain_id": "xion-testnet-2",
+  "registry_chain_name": "xion",
+  "registry_name": "Verona Testnet",
+  "coingecko": "xion",
+  "network_type": "testnet",
+  "rpc": [
+    {
+      "address": "https://verona-testnet-rpc.polkachu.com",
+      "provider": "Polkachu"
+    },
+    {
+      "address": "https://rpc.xion-testnet-2.burnt.com",
+      "provider": "🔥BurntLabs🔥"
+    },
+    {
+      "address": "https://burnt-testnet-rpc.itrocket.net",
+      "provider": "ITRocket"
+    }
+  ],
+  "api": [
+    {
+      "address": "https://verona-testnet-api.polkachu.com",
+      "provider": "Polkachu"
+    },
+    {
+      "address": "https://api.xion-testnet-2.burnt.com",
+      "provider": "🔥BurntLabs🔥"
+    },
+    {
+      "address": "https://burnt-testnet-api.itrocket.net",
+      "provider": "ITRocket"
+    }
+  ],
+  "snapshot_provider": "",
+  "sdk_version": "0.53.3",
+  "coin_type": "118",
+  "min_tx_fee": "100",
+  "addr_prefix": "xion",
+  "theme_color": "#BEA64D",
+  "logo": "/verona.png",
+  "assets": [
+    {
+      "base": "uxion",
+      "symbol": "VERONA",
+      "exponent": "6",
+      "denom_aliases": { "uxion": "uverona", "mxion": "mverona", "verona": "VERONA" },
+      "denom_units": [
+        { "denom": "uxion", "exponent": 0 },
+        { "denom": "mxion", "exponent": 3 },
+        { "denom": "verona", "exponent": 6 }
+      ],
+      "coingecko_id": "xion-2",
+      "logo": "/verona.png"
+    },
+    {
+      "base": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc",
+      "symbol": "SBC",
+      "exponent": "6",
+      "denom_aliases": {
+        "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc": "usbc",
+        "sbc": "SBC"
+      },
+      "denom_units": [
+        { "denom": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc", "exponent": 0 },
+        { "denom": "sbc", "exponent": 6 }
+      ],
+      "logo": "https://brale.network/logos/valuetype/sbc.svg"
+    },
+    {
+      "base": "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B",
+      "symbol": "OSMO",
+      "exponent": "6",
+      "denom_aliases": {
+        "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B": "uosmo",
+        "osmo": "OSMO"
+      },
+      "denom_units": [
+        { "denom": "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B", "exponent": 0 },
+        { "denom": "osmo", "exponent": 6 }
+      ],
+      "coingecko_id": "osmosis",
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.png"
+    },
+    {
+      "base": "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4",
+      "symbol": "USDC",
+      "exponent": "6",
+      "coingecko_id": "usd-coin",
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.png"
+    },
+    {
+      "base": "ibc/2DD421C34C750BA522D4C8A6657DE220ED7874EF32B56C0791660149B8A51ED4",
+      "symbol": "USDC",
+      "exponent": "6",
+      "coingecko_id": "usd-coin",
+      "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.png"
+    }
+  ],
+  "features": [
+    "account",
+    "dashboard",
+    "staking",
+    "governance",
+    "blocks",
+    "tx",
+    "supply",
+    "ibc",
+    "cosmwasm",
+    "parameters"
+  ],
+  "keplr_features": [
+    "ibc-go",
+    "ibc-transfer",
+    "no-legacy-stdTx"
+  ]
+}

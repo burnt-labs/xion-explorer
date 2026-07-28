@@ -18,9 +18,11 @@ function openSearchModal() {
   searchModalShow.value = true;
 }
 
-function preventClick(event: any) {
-  event.preventDefault();
+function stopClick(event: Event) {
   event.stopPropagation();
+}
+function selectValue(event: Event) {
+  (event.currentTarget as HTMLInputElement).select();
 }
 function confirm() {
   errorMessage.value = '';
@@ -62,7 +64,7 @@ function confirm() {
 <template>
   <div>
     <button class="btn btn-ghost btn-circle btn-sm mx-1" @click="openSearchModal">
-      <Icon icon="mdi:magnify" class="text-2xl text-gray-500 dark:text-gray-400" />
+      <Icon icon="mdi:magnify" class="text-2xl text-base-content/70" />
     </button>
 
     <!-- modal -->
@@ -71,7 +73,7 @@ function confirm() {
       class="cursor-pointer modal !pointer-events-auto !opacity-100 !visible"
       @click="closeSearchModal"
     >
-      <div class="relative modal-box cursor-default" @click="(event) => preventClick(event)">
+      <form class="relative modal-box cursor-default" @click="stopClick" @submit.prevent="confirm">
         <!-- header -->
         <div class="flex items-center justify-between">
           <div class="text-lg font-bold flex flex-col md:!flex-row justify-between items-baseline">
@@ -79,7 +81,7 @@ function confirm() {
             <span class="capitalize text-sm md:!text-base">Height/Transaction/Account Address</span>
           </div>
           <label htmlFor="modal-pool-modal" class="cursor-pointer" @click="closeSearchModal">
-            <Icon icon="zondicons:close-outline" class="text-2xl text-gray-500 dark:text-gray-400" />
+            <Icon icon="zondicons:close-outline" class="text-2xl text-base-content/70" />
           </label>
         </div>
         <!-- body -->
@@ -89,6 +91,8 @@ function confirm() {
               class="input flex-1 w-full !input-bordered"
               v-model="searchQuery"
               placeholder="Height/Transaction/Account Address"
+              @focus="selectValue"
+              @click="selectValue"
             />
             <div class="mt-2 text-right text-sm text-error" v-show="errorMessage">
               {{ errorMessage }}
@@ -97,9 +101,9 @@ function confirm() {
         </div>
         <!-- foot -->
         <div class="mt-6">
-          <button class="w-full btn btn-primary" @click="confirm">Confirm</button>
+          <button type="submit" class="w-full btn btn-primary">Confirm</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>

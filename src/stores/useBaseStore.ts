@@ -6,8 +6,9 @@ import type { Block } from '@/types';
 import { hashTx } from '@/libs';
 import { fromBase64 } from '@cosmjs/encoding';
 
-const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS || false;
-const RECENT_BLOCKS_LIMIT = import.meta.env.VITE_RECENT_BLOCK_LIMIT || 50;
+// Vite exposes env vars as strings, so `"false"` would be truthy here — compare explicitly.
+const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS === 'true';
+const RECENT_BLOCKS_LIMIT = Number(import.meta.env.VITE_RECENT_BLOCK_LIMIT) || 50;
 
 export const useBaseStore = defineStore('baseStore', {
   state: () => {
@@ -15,7 +16,7 @@ export const useBaseStore = defineStore('baseStore', {
       earliest: {} as Block,
       latest: {} as Block,
       recents: [] as Block[],
-      theme: (window.localStorage.getItem('theme') || 'dark') as 'light' | 'dark',
+      theme: (window.localStorage.getItem('theme') || 'light') as 'light' | 'dark',
       connected: false,
     };
   },
@@ -79,11 +80,27 @@ export const useBaseStore = defineStore('baseStore', {
     async fetchLatest() {
       if (!this.hasRpc) return this.latest;
       try {
-        this.latest = await this.blockchain.rpc?.getBaseBlockLatest();
+        const latest = await this.blockchain.rpc?.getBaseBlockLatest();
+        // A malformed 200 - an error body, a rate-limit page, a truncated
+        // response - would otherwise be stored as `latest`. The chain_id
+        // comparison below would then see undefined against the previous chain,
+        // wipe earliest/recents and reset the average block time to the 1000ms
+        // placeholder. Treat it as a failed poll instead.
+        //
+        // chain_id is checked as well as height: it is specifically the missing
+        // chain_id that trips that reset, so a partial payload carrying a height
+        // but no chain_id would otherwise still cause the state loss this guards.
+        const header = latest?.block?.header;
+        if (!header?.height || !header?.chain_id) {
+          throw new Error('malformed blocks/latest payload');
+        }
+        this.latest = latest;
         this.connected = true;
+        this.blockchain.notePollResult?.(true);
       } catch (error) {
         console.error('Error fetching latest block:', error);
         this.connected = false;
+        await this.blockchain.notePollResult?.(false);
       }
       if (!this.earliest || this.earliest?.block?.header?.chain_id != this.latest?.block?.header?.chain_id) {
         //reset earliest and recents

@@ -273,13 +273,13 @@ loadAvatars();
     <div>
       <div class="flex items-center justify-between py-1">
         <div class="tabs tabs-boxed bg-transparent">
-          <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'featured' }" @click="tab = 'featured'">{{
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'featured' }" @click="tab = 'featured'">{{
             $t('staking.popular')
           }}</a>
-          <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'active' }" @click="tab = 'active'">{{
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'active' }" @click="tab = 'active'">{{
             $t('staking.active')
           }}</a>
-          <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'inactive' }" @click="tab = 'inactive'">{{
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'inactive' }" @click="tab = 'inactive'">{{
             $t('staking.inactive')
           }}</a>
         </div>
@@ -306,7 +306,7 @@ loadAvatars();
               <tr
                 v-for="({ v, rank, logo }, i) in list"
                 :key="v.operator_address"
-                class="hover:bg-gray-100 dark:hover:bg-[#384059]"
+                class="hover:bg-active"
               >
                 <!-- 👉 rank -->
                 <td>
@@ -319,7 +319,7 @@ loadAvatars();
                 <td>
                   <div class="flex items-center overflow-hidden" style="max-width: 300px">
                     <div class="avatar mr-4 relative w-8 h-8 rounded-full">
-                      <div class="w-8 h-8 rounded-full bg-gray-400 absolute opacity-10"></div>
+                      <div class="w-8 h-8 rounded-full bg-base-content absolute opacity-10"></div>
                       <div class="w-8 h-8 rounded-full">
                         <img
                           v-if="logo"

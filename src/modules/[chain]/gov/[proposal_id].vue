@@ -179,7 +179,7 @@ const processList = computed(() => {
     { name: 'Turnout', value: turnout.value, class: 'bg-info' },
     { name: 'Yes', value: yes.value, class: 'bg-success' },
     { name: 'No', value: no.value, class: 'bg-error' },
-    { name: 'No With Veto', value: veto.value, class: 'bg-red-800' },
+    { name: 'No With Veto', value: veto.value, class: 'bg-error' },
     { name: 'Abstain', value: abstain.value, class: 'bg-warning' },
   ];
 });
@@ -260,22 +260,30 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
               :style="`width: ${item.value === '-' || item.value === 'NaN%' ? '0%' : item.value}`"
             ></div>
             <p
-              class="absolute inset-x-0 inset-y-0 text-center text-sm text-[#666] dark:text-[#eee] flex items-center justify-center"
+              class="absolute inset-x-0 inset-y-0 text-center text-sm text-base-content flex items-center justify-center"
             >
               {{ item.value }}
             </p>
           </div>
         </div>
-        <div class="mt-6 grid grid-cols-2">
+        <div
+          v-if="
+            proposal.status === 'PROPOSAL_STATUS_VOTING_PERIOD' ||
+            proposal.status === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'
+          "
+          class="mt-6"
+        >
           <label
+            v-if="proposal.status === 'PROPOSAL_STATUS_VOTING_PERIOD'"
             for="vote"
-            class="btn btn-primary float-right btn-sm mx-1"
+            class="btn btn-primary btn-sm w-full"
             @click="dialog.open('vote', { proposal_id })"
             >{{ $t('gov.btn_vote') }}</label
           >
           <label
+            v-if="proposal.status === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'"
             for="deposit"
-            class="btn btn-primary float-right btn-sm mx-1"
+            class="btn btn-primary btn-sm w-full"
             @click="dialog.open('deposit', { proposal_id })"
             >{{ $t('gov.btn_deposit') }}</label
           >
@@ -380,7 +388,7 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
                 class="py-2 text-sm"
                 :class="{
                   'text-yes': item.option === 'VOTE_OPTION_YES',
-                  'text-gray-400': item.option === 'VOTE_OPTION_ABSTAIN',
+                  'text-base-content/60': item.option === 'VOTE_OPTION_ABSTAIN',
                 }"
               >
                 {{ String(item.option).replace('VOTE_OPTION_', '') }}

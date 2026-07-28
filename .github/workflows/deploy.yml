@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - network: mainnet
+            url: https://explorer.burnt.com
+          - network: testnet
+            url: https://explorer.testnet.burnt.com
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ matrix.network }}
+      url: ${{ matrix.url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      # .env* is gitignored, so without this block the build silently falls back to the
+      # hardcoded defaults in the source. Override any of these via repository variables.
+      - run: yarn build:${{ matrix.network }}
+        env:
+          VITE_REFRESH_INTERVAL: ${{ vars.VITE_REFRESH_INTERVAL || '6000' }}
+          VITE_FETCH_ALL_BLOCKS: ${{ vars.VITE_FETCH_ALL_BLOCKS || 'false' }}
+          VITE_RECENT_BLOCK_LIMIT: ${{ vars.VITE_RECENT_BLOCK_LIMIT || '50' }}
+          VITE_COINGECKO_URL: ${{ vars.VITE_COINGECKO_URL || 'https://api.coingecko.com' }}
+          VITE_GITHUB_API_URL: ${{ vars.VITE_GITHUB_API_URL || 'https://api.github.com/repos/cosmos/chain-registry/contents' }}
+          VITE_PINGPUB_API_URL: ${{ vars.VITE_PINGPUB_API_URL || 'https://registry.ping.pub' }}
+          VITE_IBC_USE_GITHUB_API: ${{ vars.VITE_IBC_USE_GITHUB_API || 'false' }}
+      - name: Deploy worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env ${{ matrix.network }}
+          packageManager: yarn

@@ -18,9 +18,7 @@ import DynamicComponent from '@/components/dynamic/DynamicComponent.vue';
 import { useRoute } from 'vue-router';
 import type { ContractInfo, PaginabledContractStates } from '../types';
 
-import { JsonViewer } from 'vue3-json-viewer';
-// if you used v1.0.5 or latster ,you should add import "vue3-json-viewer/dist/index.css"
-import 'vue3-json-viewer/dist/index.css';
+import JsonTree from '@/components/JsonTree.vue';
 
 const chainStore = useBlockchain();
 const baseStore = useBaseStore();
@@ -152,16 +150,16 @@ const tab = ref('detail');
 <template>
   <div>
     <div class="tabs tabs-boxed bg-transparent mb-4">
-      <a class="tab text-gray-400 uppercase" :class="{ 'tab-active': tab === 'detail' }" @click="tab = 'detail'">{{
+      <a class="tab text-base-content/60 uppercase" :class="{ 'tab-active': tab === 'detail' }" @click="tab = 'detail'">{{
         $t('cosmwasm.contract_detail')
       }}</a>
       <a
-        class="tab text-gray-400 uppercase"
+        class="tab text-base-content/60 uppercase"
         :class="{ 'tab-active': tab === 'transaction' }"
         @click="tab = 'transaction'"
         >Transactions</a
       >
-      <a class="tab text-gray-400 uppercase" :class="{ 'tab-active': tab === 'query' }" @click="tab = 'query'">Query</a>
+      <a class="tab text-base-content/60 uppercase" :class="{ 'tab-active': tab === 'query' }" @click="tab = 'query'">Query</a>
     </div>
 
     <div v-show="tab === 'detail'">
@@ -193,20 +191,12 @@ const tab = ref('detail');
           <div class="text-lg">{{ $t('cosmwasm.contract_states') }}</div>
         </div>
         <div class="overflow-auto">
-          <JsonViewer
-            :value="
+          <JsonTree :data="
               state.models?.map((v) => ({
                 key: format.hexToString(v.key),
                 value: JSON.parse(format.base64ToString(v.value)),
               })) || ''
-            "
-            :theme="baseStore.theme || 'dark'"
-            style="background: transparent"
-            copyable
-            boxed
-            sort
-            :expand-depth="5"
-          />
+            " :deep="2" />
           <PaginationBar :limit="pageRequest.limit" :total="state.pagination?.total" :callback="pageloadState" />
         </div>
       </div>
@@ -341,15 +331,7 @@ const tab = ref('detail');
       <div class="flex items-center justify-between px-3 pt-2 mb-4">
         <div class="text-lg font-semibold">{{ $t('cosmwasm.result') }}</div>
       </div>
-      <JsonViewer
-        :value="result"
-        :theme="baseStore.theme"
-        style="background: transparent"
-        copyable
-        boxed
-        sort
-        :expand-depth="5"
-      />
+      <JsonTree :data="result" :deep="2" />
     </div>
   </div>
 </template>
