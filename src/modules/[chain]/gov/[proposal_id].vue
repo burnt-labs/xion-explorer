@@ -266,16 +266,24 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
             </p>
           </div>
         </div>
-        <div class="mt-6 grid grid-cols-2">
+        <div
+          v-if="
+            proposal.status === 'PROPOSAL_STATUS_VOTING_PERIOD' ||
+            proposal.status === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'
+          "
+          class="mt-6"
+        >
           <label
+            v-if="proposal.status === 'PROPOSAL_STATUS_VOTING_PERIOD'"
             for="vote"
-            class="btn btn-primary float-right btn-sm mx-1"
+            class="btn btn-primary btn-sm w-full"
             @click="dialog.open('vote', { proposal_id })"
             >{{ $t('gov.btn_vote') }}</label
           >
           <label
+            v-if="proposal.status === 'PROPOSAL_STATUS_DEPOSIT_PERIOD'"
             for="deposit"
-            class="btn btn-primary float-right btn-sm mx-1"
+            class="btn btn-primary btn-sm w-full"
             @click="dialog.open('deposit', { proposal_id })"
             >{{ $t('gov.btn_deposit') }}</label
           >
