@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "Erweitert",
     "dashboard": "Dashboard",
     "blocks": "Blöcke",
     "staking": "Staking",
@@ -7,7 +8,7 @@
     "parameters": "Parameter",
     "uptime": "Verfügbarkeit",
     "state-sync": "State Sync",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "Verträge",
     "widget": "Widgets",
     "tx": "Transaktionen",
     "ibc": "IBC",

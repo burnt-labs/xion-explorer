@@ -15,7 +15,8 @@ const verona = {
   warmDark: '#2c241f',
 };
 
-// Elevation tints derived from Sea, so dark surfaces can layer without leaving the brand.
+// Elevation tints derived from Forest. Sea remains a branded/navigation colour,
+// which keeps dark product surfaces distinct from Ping.pub's blue-grey stack.
 // Semantic colours pulled into the brand's hue/saturation band. Upstream's
 // #3fb68b (mint, hue 158) and #ff5353 (100% saturation) sit outside a palette
 // where nothing exceeds 70%, which is what made them read as foreign.
@@ -33,8 +34,10 @@ const semantic = {
   errorDark: '#e0776c',
 };
 
-const seaDeep = '#101834'; // page background
-const seaSunken = '#141e42'; // table headers, sunken bands
+const forestDeep = '#090f0c'; // page background
+const forestSunken = '#101a14';
+const forestPanel = '#19271f';
+const forestRaised = '#22362b'; // table headers, sunken bands
 
 // Product-surface tokens, lifted from burnt-labs/xion-frontends
 // `apps/xion-app/src/styles.css` (the --bento-* set behind app.burnt.com).
@@ -86,17 +89,17 @@ module.exports = {
     themes: [
       {
         dark: {
-          primary: verona.sky,
-          'primary-content': verona.sea,
+          primary: verona.gold,
+          'primary-content': verona.linen,
           secondary: verona.gold,
           'secondary-content': verona.sea,
           accent: verona.sky,
           'accent-content': verona.sea,
           neutral: verona.grey,
           'neutral-content': verona.linen,
-          'base-100': verona.sea,
-          'base-200': seaSunken,
-          'base-300': seaDeep,
+          'base-100': forestPanel,
+          'base-200': forestSunken,
+          'base-300': forestRaised,
           'base-content': verona.linen,
           info: verona.sky,
           success: semantic.successDark,
@@ -111,11 +114,11 @@ module.exports = {
       },
       {
         light: {
-          primary: bento.accent,
+          primary: verona.sky,
           'primary-content': verona.linen,
           secondary: verona.gold,
           'secondary-content': verona.sea,
-          accent: verona.sky,
+          accent: verona.sea,
           'accent-content': verona.linen,
           neutral: verona.grey,
           'neutral-content': verona.linen,

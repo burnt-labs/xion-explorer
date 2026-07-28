@@ -7,7 +7,10 @@ import { PageRequest } from '@/types';
 import PaginationBar from '@/components/PaginationBar.vue';
 import router from '@/router';
 
-const props = defineProps(['chain']);
+const props = defineProps<{
+  chain: string;
+  uploadButtonBySearch?: boolean;
+}>();
 
 const codes = ref({} as PaginabledCodeInfos);
 
@@ -43,7 +46,7 @@ function gotoHistory() {
 <template>
   <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
     <h2 class="card-title truncate w-full mb-4">{{ $t('cosmwasm.title') }}</h2>
-    <div class="grid grid-flow-col auto-cols-max gap-4 overflow-hidden">
+    <div class="grid grid-flow-col auto-cols-max gap-4 overflow-hidden" :class="{ 'grid-cols-[auto_auto_1fr]': uploadButtonBySearch }">
       <div class="join w-full border border-primary">
         <select v-model="field" class="select select-primary">
           <option value="contract">Contract</option>
@@ -58,6 +61,14 @@ function gotoHistory() {
           <option v-for="(v, index) in history" :key="index" :value="v">...{{ String(v).substring(45) }}</option>
         </select>
       </div>
+      <label
+        v-if="uploadButtonBySearch"
+        for="wasm_store_code"
+        class="btn btn-primary justify-self-end"
+        @click="dialog.open('wasm_store_code', {})"
+      >
+        {{ $t('cosmwasm.btn_up_sc') }}
+      </label>
     </div>
 
     <div class="overflow-x-auto">
@@ -76,13 +87,23 @@ function gotoHistory() {
             <td>
               <RouterLink
                 :to="`/${props.chain}/cosmwasm/${v.code_id}/contracts`"
-                class="truncate max-w-[200px] block text-primary"
+                class="block truncate text-primary"
+                style="max-width: clamp(10rem, 32vw, 42rem)"
                 :title="v.data_hash"
               >
                 {{ v.data_hash }}
               </RouterLink>
             </td>
-            <td>{{ v.creator }}</td>
+            <td>
+              <RouterLink
+                :to="`/${props.chain}/account/${v.creator}`"
+                class="block truncate text-primary"
+                style="max-width: clamp(8rem, 22vw, 24rem)"
+                :title="v.creator"
+              >
+                {{ v.creator }}
+              </RouterLink>
+            </td>
             <td>
               {{ v.instantiate_permission?.permission }}
               <span>{{ v.instantiate_permission?.address }} {{ v.instantiate_permission?.addresses.join(', ') }}</span>
@@ -92,7 +113,7 @@ function gotoHistory() {
       </table>
       <div class="flex justify-between">
         <PaginationBar :limit="pageRequest.limit" :total="codes.pagination?.total" :callback="pageload" />
-        <label for="wasm_store_code" class="btn btn-primary my-5" @click="dialog.open('wasm_store_code', {})">{{
+        <label v-if="!uploadButtonBySearch" for="wasm_store_code" class="btn btn-primary my-5" @click="dialog.open('wasm_store_code', {})">{{
           $t('cosmwasm.btn_up_sc')
         }}</label>
       </div>

@@ -10,9 +10,12 @@
     "build": "run-p type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
+    "build:mainnet": "vite build --mode mainnet",
+    "build:testnet": "vite build --mode testnet",
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@burnt-labs/abstraxion-js": "1.0.0-alpha.1",
     "@chain-registry/client": "^1.53.184",
     "@chain-registry/types": "^0.50.184",
     "@chenfengyuan/vue-countdown": "2",

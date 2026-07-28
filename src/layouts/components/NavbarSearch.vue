@@ -73,7 +73,7 @@ function confirm() {
       class="cursor-pointer modal !pointer-events-auto !opacity-100 !visible"
       @click="closeSearchModal"
     >
-      <form class="relative modal-box cursor-default" @click="stopClick" @submit.prevent="confirm">
+      <form class="relative modal-box cursor-default" @click="(event) => preventClick(event)" @submit.prevent="confirm">
         <!-- header -->
         <div class="flex items-center justify-between">
           <div class="text-lg font-bold flex flex-col md:!flex-row justify-between items-baseline">

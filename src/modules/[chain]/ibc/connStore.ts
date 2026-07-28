@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { useBlockchain } from '@/stores';
-import { ChainRegistryClient } from '@chain-registry/client';
+import { ChainRegistryFetcher } from '@chain-registry/client';
 import type { IBCData } from '@chain-registry/types/ibc_data.schema';
 import router from '@/router';
 import fetch from 'cross-fetch';
@@ -11,6 +11,12 @@ const PINGPUB_API_URL = import.meta.env.VITE_PINGPUB_API_URL || 'https://registr
 const GITHUB_API_URL =
   import.meta.env.VITE_GITHUB_API_URL || 'https://api.github.com/repos/cosmos/chain-registry/contents';
 const IBC_API_URL = IBC_USE_GITHUB_API ? GITHUB_API_URL : PINGPUB_API_URL;
+
+type RegistryChainIdentity = { chain_name: string; chain_id?: string };
+
+function matchesChainId(chain: RegistryChainIdentity, chainId: string) {
+  return chain?.chain_id === chainId;
+}
 
 export const useIBCModule = defineStore('module-ibc', {
   state: () => {
@@ -27,11 +33,14 @@ export const useIBCModule = defineStore('module-ibc', {
     chainName(): string {
       return this.chain.chainName;
     },
+    registryChainName(): string {
+      return this.chain.current?.registryChainName || this.chainName;
+    },
+    chainId(): string {
+      return this.chain.current?.chainId || '';
+    },
     isFirstChain(): boolean {
-      return (
-        this.registryConf.chain_1.chain_name === this.chain.current?.prettyName ||
-        this.registryConf.chain_1.chain_name === this.chain.chainName
-      );
+      return matchesChainId(this.registryConf.chain_1, this.chainId);
     },
     sourceField(): string {
       return this.isFirstChain ? 'chain_1' : 'chain_2';
@@ -44,25 +53,22 @@ export const useIBCModule = defineStore('module-ibc', {
     },
   },
   actions: {
+    isCurrentChain(chain: { chain_name: string; chain_id?: string }): boolean {
+      return matchesChainId(chain, this.chainId);
+    },
     load() {
-      const prefix = this.chain.current?.networkType?.includes('testnet') ? 'testnets/' : '';
-      const client = new ChainRegistryClient({
-        chainNames: [this.chainName],
-        baseUrl: IBC_USE_GITHUB_API ? undefined : new URL(`${prefix}`, PINGPUB_API_URL + '/').toString(),
-      });
       this.fetchIBCUrls().then((res) => {
-        res.forEach((element: any) => {
-          if (element.download_url) {
-            client.urls.push(element.download_url);
-          }
+        const client = new ChainRegistryFetcher({
+          urls: res.map((element: any) => element.download_url).filter(Boolean),
         });
         client.fetchUrls().then(() => {
-          const info = client.getChainIbcData(this.chainName);
+          const info = client.ibcData.filter(
+            (entry) => this.isCurrentChain(entry.chain_1) || this.isCurrentChain(entry.chain_2)
+          );
           this.info = info.sort((a, b) => {
             // Sort by remote chain name (not equal to this.chainName)
             const getRemote = (x: any) =>
-              x?.chain_1?.chain_name === this.chain.current?.prettyName ||
-              x?.chain_1?.chain_name === this.chain.chainName
+              this.isCurrentChain(x?.chain_1)
                 ? x.chain_2.chain_name
                 : x.chain_1.chain_name;
             return getRemote(a).localeCompare(getRemote(b));
@@ -76,7 +82,9 @@ export const useIBCModule = defineStore('module-ibc', {
       console.log('Fetching IBC URLs from:', IBC_API_URL);
       let entries = await fetch(ibcEndpoint)
         .then((res) => res.json())
-        .then((data: any) => (Array.isArray(data) ? data.filter((x: any) => x.name.match(this.chainName)) : []));
+        .then((data: any) =>
+          Array.isArray(data) ? data.filter((x: any) => x.name.includes(this.registryChainName)) : []
+        );
 
       // If using PINGPUB_API_URL, add thedownload URLs
       if (IBC_API_URL == PINGPUB_API_URL) {
