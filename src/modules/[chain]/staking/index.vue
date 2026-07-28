@@ -6,6 +6,7 @@ import { Icon } from '@iconify/vue';
 import type { Key, SlashingParam, Validator } from '@/types';
 import { formatSeconds } from '@/libs/utils';
 import { diff } from 'semver';
+import UptimeView from './UptimeView.vue';
 
 const staking = useStakingStore();
 const base = useBaseStore();
@@ -19,6 +20,7 @@ const avatars = ref(cache || {});
 const latest = ref({} as Record<string, number>);
 const yesterday = ref({} as Record<string, number>);
 const tab = ref('active');
+const validatorFilter = ref('');
 const unbondList = ref([] as Validator[]);
 const slashing = ref({} as SlashingParam);
 
@@ -137,19 +139,26 @@ function isFeatured(endpoints: string[], who?: { website?: string; moniker: stri
 }
 
 const list = computed(() => {
+  const matchesFilter = (validator: Validator) =>
+    validator.description.moniker.toLowerCase().includes(validatorFilter.value.trim().toLowerCase());
   if (tab.value === 'active') {
-    return staking.validators.map((x, i) => ({ v: x, rank: calculateRank(i), logo: logo(x.description.identity) }));
+    return staking.validators
+      .filter(matchesFilter)
+      .map((x, i) => ({ v: x, rank: calculateRank(i), logo: logo(x.description.identity) }));
   } else if (tab.value === 'featured') {
     const endpoint = chainStore.current?.endpoints?.rest?.map((x) => x.provider);
     if (endpoint) {
       endpoint.push('ping');
       return staking.validators
         .filter((x) => isFeatured(endpoint.filter(Boolean) as string[], x.description))
+        .filter(matchesFilter)
         .map((x, i) => ({ v: x, rank: 'primary', logo: logo(x.description.identity) }));
     }
     return [];
   }
-  return unbondList.value.map((x, i) => ({ v: x, rank: 'primary', logo: logo(x.description.identity) }));
+  return unbondList.value
+    .filter(matchesFilter)
+    .map((x, i) => ({ v: x, rank: 'primary', logo: logo(x.description.identity) }));
 });
 
 const fetchAvatar = (identity: string) => {
@@ -282,12 +291,27 @@ loadAvatars();
           <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'inactive' }" @click="tab = 'inactive'">{{
             $t('staking.inactive')
           }}</a>
+          <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'uptime' }" @click="tab = 'uptime'">{{
+            $t('module.uptime')
+          }}</a>
         </div>
 
-        <div class="text-lg font-semibold">{{ list.length }}/{{ staking.params.max_validators }}</div>
+        <div v-if="tab !== 'uptime'" class="text-lg font-semibold">
+          {{ list.length }}/{{ staking.params.max_validators }}
+        </div>
       </div>
 
-      <div class="bg-base-100 px-4 pt-3 pb-4 rounded shadow">
+      <div class="mb-4">
+        <input
+          v-model="validatorFilter"
+          type="search"
+          placeholder="Filter validators"
+          class="input input-bordered input-sm h-10 w-full"
+          aria-label="Filter validators"
+        />
+      </div>
+
+      <div v-if="tab !== 'uptime'" class="bg-base-100 px-4 pt-3 pb-4 rounded shadow">
         <div class="overflow-x-auto">
           <table class="table staking-table w-full">
             <thead class="bg-base-200">
@@ -418,6 +442,13 @@ loadAvatars();
           </div>
         </div>
       </div>
+      <UptimeView
+        v-else
+        :chain="chainStore.chainName"
+        :filter-text="validatorFilter"
+        embedded
+        view="blocks"
+      />
     </div>
   </div>
 </template>
