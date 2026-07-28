@@ -7,6 +7,7 @@ import type { Key, SlashingParam, Validator } from '@/types';
 import { formatSeconds } from '@/libs/utils';
 import { diff } from 'semver';
 import UptimeView from '@/components/UptimeView.vue';
+import ConsensusView from '@/components/ConsensusView.vue';
 
 const staking = useStakingStore();
 const base = useBaseStore();
@@ -294,14 +295,17 @@ loadAvatars();
           <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'uptime' }" @click="tab = 'uptime'">{{
             $t('module.uptime')
           }}</a>
+          <a class="tab text-gray-400" :class="{ 'tab-active': tab === 'consensus' }" @click="tab = 'consensus'">{{
+            $t('module.consensus')
+          }}</a>
         </div>
 
-        <div v-if="tab !== 'uptime'" class="text-lg font-semibold">
+        <div v-if="tab !== 'uptime' && tab !== 'consensus'" class="text-lg font-semibold">
           {{ list.length }}/{{ staking.params.max_validators }}
         </div>
       </div>
 
-      <div class="mb-4">
+      <div v-if="tab !== 'consensus'" class="mb-4">
         <input
           v-model="validatorFilter"
           type="search"
@@ -311,7 +315,7 @@ loadAvatars();
         />
       </div>
 
-      <div v-if="tab !== 'uptime'" class="bg-base-100 px-4 pt-3 pb-4 rounded shadow">
+      <div v-if="tab !== 'uptime' && tab !== 'consensus'" class="bg-base-100 px-4 pt-3 pb-4 rounded shadow">
         <div class="overflow-x-auto">
           <table class="table staking-table w-full">
             <thead class="bg-base-200">
@@ -443,12 +447,13 @@ loadAvatars();
         </div>
       </div>
       <UptimeView
-        v-else
+        v-else-if="tab === 'uptime'"
         :chain="chainStore.chainName"
         :filter-text="validatorFilter"
         embedded
         view="blocks"
       />
+      <ConsensusView v-else-if="tab === 'consensus'" />
     </div>
   </div>
 </template>
