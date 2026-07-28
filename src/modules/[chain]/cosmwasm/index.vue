@@ -76,7 +76,7 @@ function gotoHistory() {
             <td>
               <RouterLink
                 :to="`/${props.chain}/cosmwasm/${v.code_id}/contracts`"
-                class="block truncate text-primary dark:invert"
+                class="block truncate text-primary"
                 style="max-width: clamp(10rem, 32vw, 42rem)"
                 :title="v.data_hash"
               >
@@ -86,7 +86,7 @@ function gotoHistory() {
             <td>
               <RouterLink
                 :to="`/${props.chain}/account/${v.creator}`"
-                class="block truncate text-primary dark:invert"
+                class="block truncate text-primary"
                 style="max-width: clamp(8rem, 22vw, 24rem)"
                 :title="v.creator"
               >
