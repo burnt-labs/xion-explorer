@@ -38,6 +38,47 @@ html[data-theme='dark'] {
   z-index: 2;
 }
 
+/* Normalize explorer tables onto theme tokens so headers, cells, and wrappers
+   stay consistent across light/dark without per-page color overrides. */
+.table {
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: hsl(var(--b1));
+}
+
+.table thead th,
+.table thead td {
+  background-color: hsl(var(--b2));
+  color: hsl(var(--bc) / 0.65);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.table :where(th, td) {
+  padding: 0.75rem;
+}
+
+.table tbody td {
+  background-color: hsl(var(--b1));
+}
+
+.table tbody tr:hover td,
+.table.hover tbody tr:hover td,
+.table tbody tr.hover:hover td {
+  background-color: var(--bg-active);
+}
+
+.overflow-x-auto:has(> .table),
+.overflow-auto:has(> .table),
+.overflow-hidden:has(> .table) {
+  border-radius: 0.5rem;
+  background: hsl(var(--b1));
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.25s ease-out;
