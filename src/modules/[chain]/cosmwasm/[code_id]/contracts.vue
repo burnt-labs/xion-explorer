@@ -20,39 +20,39 @@ const dialog = useTxDialog();
 const infoDialog = ref(false);
 const wasmStore = useWasmStore();
 async function loadContractInfo(addresses: string[]) {
-  const entries = await Promise.all(
+  const results = await Promise.allSettled(
     addresses.map(async (address) => {
       const result = await wasmStore.wasmClient.getWasmContracts(address);
       return [address, result.contract_info] as const;
     })
   );
-  contractInfo.value = Object.fromEntries(entries);
+  const entries = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  contractInfo.value = { ...contractInfo.value, ...Object.fromEntries(entries) };
 }
 
-function loadContract(pageNum: number) {
+async function loadContract(pageNum: number) {
   const pr = new PageRequest();
   if (String(props.code_id).search(/^[\d]+$/) > -1) {
     // CosmWasm code-contract queries support key pagination, but reject
     // pagination.count_total and offset when they are combined.
     pr.count_total = false;
     pr.key = pageKeys.value[pageNum];
-    wasmStore.wasmClient.getWasmCodeContracts(props.code_id, pr).then(async (x) => {
-      await loadContractInfo(x.contracts || []);
-      response.value = x;
-      currentPage.value = pageNum;
-      if (x.pagination?.next_key) pageKeys.value[pageNum + 1] = x.pagination.next_key;
-    });
+    const x = await wasmStore.wasmClient.getWasmCodeContracts(props.code_id, pr);
+    response.value = x;
+    contractInfo.value = {};
+    currentPage.value = pageNum;
+    if (x.pagination?.next_key) pageKeys.value[pageNum + 1] = x.pagination.next_key;
+    void loadContractInfo(x.contracts || []);
   } else {
     // query by creator
-    pr.count_total = false;
     pr.setPage(pageNum);
-    wasmStore.wasmClient.getWasmContractsByCreator(props.code_id, pr).then(async (x) => {
-      await loadContractInfo(x.contract_addresses || []);
-      response.value = {
-        contracts: x.contract_addresses,
-        pagination: x.pagination,
-      };
-    });
+    const x = await wasmStore.wasmClient.getWasmContractsByCreator(props.code_id, pr);
+    response.value = {
+      contracts: x.contract_addresses,
+      pagination: x.pagination,
+    };
+    contractInfo.value = {};
+    void loadContractInfo(x.contract_addresses || []);
   }
 }
 loadContract(1);
