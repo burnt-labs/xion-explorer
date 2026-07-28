@@ -6,7 +6,7 @@ import { Icon } from '@iconify/vue';
 import type { Key, SlashingParam, Validator } from '@/types';
 import { formatSeconds } from '@/libs/utils';
 import { diff } from 'semver';
-import UptimeView from './UptimeView.vue';
+import UptimeView from '@/components/UptimeView.vue';
 
 const staking = useStakingStore();
 const base = useBaseStore();
