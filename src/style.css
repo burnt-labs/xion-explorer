@@ -25,8 +25,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Verona surfaces. Light bands sit on Linen/Seashell with Sea text; dark bands
-   sit on Sea with Linen text, per the design system's contrast rule. */
+/* Verona surfaces. Light bands sit on Linen/Seashell with Sea text; dark product
+   surfaces use Forest with Linen text. Sea stays reserved for standalone brand moments instead of being paired with
+   Forest across product surfaces. */
 :root {
   --root-bg: #f8f7f3; /* bento bg / Linen */
   --color-base-100: #ffffff; /* bento panel */
@@ -37,33 +38,53 @@ body {
 
 html.dark,
 html[data-theme='dark'] {
-  --root-bg: #101834; /* deep Sea */
-  --color-base-100: #192550; /* Sea */
+  --root-bg: #090f0c; /* deep Forest */
+  --color-base-100: #19271f; /* Forest */
   --text-main: #f8f7f3; /* Linen */
-  --text-secondary: #c3cbe0; /* 9.1:1 on Sea */
-  --bg-active: #1f2c60;
+  --text-secondary: #c4d0ca; /* muted Linen on Forest */
+  --bg-active: #22362b; /* Verona Grey */
+  --panel-border: rgb(47 72 66 / 0.7);
 }
 
 html.dark .bg-base-100,
 html[data-theme='dark'] .bg-base-100 {
-  background-color: #192550;
+  background-color: #19271f;
 }
 
 html.dark th,
 html[data-theme='dark'] th,
 html.dark .bg-base-200,
 html[data-theme='dark'] .bg-base-200 {
-  background-color: #141e42;
+  background-color: #101a14;
 }
 
 html.dark tr.hover:hover,
 html[data-theme='dark'] tr.hover:hover {
-  background-color: #1f2c60;
+  background-color: #22362b;
+}
+
+html.dark .bg-base-100.rounded,
+html.dark .bg-base-100.rounded-md,
+html.dark .bg-base-100.rounded-lg,
+html[data-theme='dark'] .bg-base-100.rounded,
+html[data-theme='dark'] .bg-base-100.rounded-md,
+html[data-theme='dark'] .bg-base-100.rounded-lg {
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.16);
+}
+
+html.dark .text-white,
+html.dark .\!text-white,
+html.dark .dark:text-white,
+html[data-theme='dark'] .text-white,
+html[data-theme='dark'] .\!text-white,
+html[data-theme='dark'] .dark:text-white {
+  color: #f8f7f3 !important;
 }
 
 html.dark .modal-box,
 html[data-theme='dark'] .modal-box {
-  background-color: #192550;
+  background-color: #19271f;
 }
 
 html.dark input,
@@ -72,7 +93,7 @@ html.dark select.select,
 html[data-theme='dark'] input,
 html[data-theme='dark'] textarea.textarea,
 html[data-theme='dark'] select.select {
-  background-color: #141e42;
+  background-color: #101a14;
 }
 
 /* ---------------------------------------------------------------------------
@@ -85,6 +106,87 @@ html[data-theme='dark'] select.select {
   --hero-image: url('/verona-bg.png');
   --hero-scrim: rgba(25, 37, 80, 0.74); /* deepens the texture to match verona.dev */
   --hero-ink: #f8f7f3; /* Linen */
+}
+
+.uptime-legend-swatch {
+  display: inline-block;
+  width: 4px;
+  min-height: 1.25rem;
+}
+
+.uptime-unknown { background-color: #4cb1df; }
+.uptime-committed { background-color: #2f7d57; }
+.uptime-precommitted { background-color: #bea64d; }
+.uptime-missed { background-color: #bb392a; }
+
+html.light :where(a.link, a.text-primary, .btn-link),
+html.light :where(a.link, a.text-primary, .btn-link):hover,
+html.light :where(a.link, a.text-primary, .btn-link):focus-visible,
+html.light .link-primary,
+html.light .link-primary:hover,
+html.light .link-primary:focus-visible,
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link),
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):hover,
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):focus-visible,
+html[data-theme='light'] .link-primary,
+html[data-theme='light'] .link-primary:hover,
+html[data-theme='light'] .link-primary:focus-visible,
+html[data-theme='light'] .text-primary,
+html[data-theme='light'] .text-info {
+  color: #4cb1df;
+}
+
+html.dark :where(a.link, a.text-primary, .btn-link),
+html.dark :where(a.link, a.text-primary, .btn-link):hover,
+html.dark :where(a.link, a.text-primary, .btn-link):focus-visible,
+html.dark .link-primary,
+html.dark .link-primary:hover,
+html.dark .link-primary:focus-visible,
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link),
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):hover,
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):focus-visible,
+html[data-theme='dark'] .link-primary,
+html[data-theme='dark'] .link-primary:hover,
+html[data-theme='dark'] .link-primary:focus-visible,
+html[data-theme='dark'] .text-primary,
+html[data-theme='dark'] .text-info {
+  color: #b56135;
+}
+
+/* Keep link hover feedback consistent across native anchors and RouterLinks. */
+html.light a:not(.btn):not(.tab):hover,
+html[data-theme='light'] a:not(.btn):not(.tab):hover {
+  color: #b56135;
+  text-decoration: underline;
+}
+
+html.dark a:not(.btn):not(.tab),
+html.dark .btn-link,
+html[data-theme='dark'] a:not(.btn):not(.tab),
+html[data-theme='dark'] .btn-link {
+  color: #4cb1df !important;
+}
+
+html.dark a:not(.btn):not(.tab):hover,
+html.dark .btn-link:hover,
+html[data-theme='dark'] a:not(.btn):not(.tab):hover,
+html[data-theme='dark'] .btn-link:hover {
+  color: #b56135 !important;
+  text-decoration: underline;
+}
+
+.verona-sidebar a:hover {
+  text-decoration: none !important;
+}
+
+html.dark .text-primary.dark\:invert,
+html[data-theme='dark'] .text-primary.dark\:invert {
+  filter: none;
+}
+
+html[data-theme='light'] .uptime-panel {
+  border: 1px solid #d5cbb9;
+  box-shadow: 0 8px 24px rgb(25 37 80 / 0.08);
 }
 
 /* Headlines and brand moments use the Garamond stack. */

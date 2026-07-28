@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "issuer": "https://oauth2.testnet.burnt.com",
+  "clientId": "43ZC8PvCvpJJ5kXH",
+  "treasury": "xion1vuz2trg9j9s9a5u9l9jh7j6mxzfpvj5qdtdeu8ahpd2gwv0hu7jqskxv7e",
+  "redirectUri": "https://explorer.testnet.burnt.com/oauth/callback",
+  "scopes": [
+    "xion:identity:read",
+    "xion:blockchain:read",
+    "xion:transactions:submit"
+  ]
+}

@@ -1,18 +1,19 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 // Components
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue';
 import NavbarSearch from '@/layouts/components/NavbarSearch.vue';
-import ChainProfile from '@/layouts/components/ChainProfile.vue';
+import ChainProfile from './ChainProfile.vue';
 
-import { useDashboard, useBaseStore, useBlockchain } from '@/stores';
+import { useDashboard, useBaseStore, useBlockchain, useWalletStore } from '@/stores';
 // Imported so Vite fingerprints it; a literal "/src/assets/..." src 404s in a build.
 import veronaLogo from '@/assets/images/verona-logo-full.svg';
 
 import NavBarI18n from '@/layouts/components/NavBarI18n.vue';
-import NavBarWallet from '@/layouts/components/NavBarWallet.vue';
+import NavBarWallet from './NavBarWallet.vue';
 import type {
   NavGroup,
   NavLink,
@@ -21,9 +22,15 @@ import type {
 } from '@/layouts/types';
 import dayjs from 'dayjs';
 
+type VeronaNavLink = NavLink & {
+  action?: 'account';
+};
+
 const dashboard = useDashboard();
 dashboard.initial();
 const blockchain = useBlockchain();
+const walletStore = useWalletStore();
+const router = useRouter();
 blockchain.randomSetupEndpoint();
 const baseStore = useBaseStore();
 
@@ -53,6 +60,13 @@ function accentTint(hex?: string, alpha = 0.16) {
 
 const sidebarShow = ref(false);
 const sidebarOpen = ref(true);
+const otherNetwork = __VERONA_ENVIRONMENT__;
+const showAdvancedStats = computed(() => {
+  const route = router.currentRoute.value;
+  return route.matched.some((record) =>
+    String(record.meta.i18n || '') === 'parameters'
+  );
+});
 
 const changeOpen = (index: Number) => {
   if (index === 0) {
@@ -64,18 +78,21 @@ const showDiscord = true; //window.location.host.search('ping.pub') > -1;
 function isNavGroup(nav: VerticalNavItems | any): nav is NavGroup {
   return (<NavGroup>nav).children !== undefined;
 }
-function isNavLink(nav: VerticalNavItems | any): nav is NavLink {
-  return (<NavLink>nav).to !== undefined;
+function isNavLink(nav: VerticalNavItems | any): nav is VeronaNavLink {
+  return (<VeronaNavLink>nav).to !== undefined || (<VeronaNavLink>nav).href !== undefined || (<VeronaNavLink>nav).action !== undefined;
 }
 function isNavTitle(nav: VerticalNavItems | any): nav is NavSectionTitle {
   return (<NavSectionTitle>nav).heading !== undefined;
 }
-function selected(route: any, nav: NavLink) {
+function selected(route: any, nav: VeronaNavLink) {
   const b =
     route.path === nav.to?.path ||
-    (route.path.startsWith(nav.to?.path) &&
+    (nav.to?.path && route.path.startsWith(nav.to.path) &&
       nav.title.indexOf('dashboard') === -1);
   return b;
+}
+function groupSelected(route: any, nav: NavGroup) {
+  return nav.children.some((child) => isNavLink(child) && selected(route, child));
 }
 const blocktime = computed(() => {
   return dayjs(baseStore.latest?.block?.header?.time);
@@ -86,6 +103,39 @@ const behind = computed(() => {
   return blocktime.value.isBefore(current);
 });
 
+function openAccount() {
+  if (walletStore.currentAddress) {
+    router.push({ path: `/${blockchain.chainName}/account/${walletStore.currentAddress}` });
+  }
+}
+
+const transactionDialogIds = new Set([
+  'delegate',
+  'deposit',
+  'redelegate',
+  'send',
+  'transfer',
+  'unbond',
+  'vote',
+  'withdraw',
+  'withdraw_commission',
+  'wasm_clear_admin',
+  'wasm_execute_contract',
+  'wasm_instantiate_contract',
+  'wasm_migrate_contract',
+  'wasm_store_code',
+  'wasm_update_admin',
+]);
+
+function redirectDisconnectedTransaction(event: MouseEvent) {
+  if (walletStore.currentAddress) return;
+  const trigger = (event.target as HTMLElement | null)?.closest<HTMLLabelElement>('label[for]');
+  if (!trigger || !transactionDialogIds.has(trigger.htmlFor)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  document.querySelector<HTMLLabelElement>('label[for="VeronaConnectWallet"]')?.click();
+}
+
 dayjs();
 </script>
 
@@ -93,8 +143,8 @@ dayjs();
   <div class="bg-base-200 dark:bg-base-300">
     <!-- sidebar -->
     <div
-      class="w-64 fixed z-50 left-0 top-0 bottom-0 overflow-auto bg-base-100 border-r border-gray-100 dark:border-gray-700"
-      :class="{ block: sidebarShow, 'hidden xl:!block': !sidebarShow }"
+      class="verona-sidebar w-64 fixed z-50 left-0 top-0 bottom-0 flex flex-col bg-base-100 border-r border-gray-100 dark:border-gray-700"
+      :class="{ flex: sidebarShow, 'hidden xl:!flex': !sidebarShow }"
     >
       <div class="flex justify-between mt-1 pl-4 py-4 mb-1">
         <RouterLink to="/" class="flex flex-col items-start gap-[3px]">
@@ -114,11 +164,12 @@ dayjs();
           <Icon icon="mdi-close" class="text-2xl" />
         </div>
       </div>
-      <div
-        v-for="(item, index) of blockchain.computedChainMenu"
-        :key="index"
-        class="px-2"
-      >
+      <div class="flex-1 overflow-auto">
+        <div
+          v-for="(item, index) of blockchain.computedChainMenu"
+          :key="index"
+          class="px-2"
+        >
         <div
           v-if="isNavGroup(item)"
           :tabindex="index"
@@ -134,25 +185,20 @@ dayjs();
               v-for="(el, key) of item?.children"
               class="menu bg-base-100 w-full !p-0"
             >
-              <RouterLink
+              <component
                 v-if="isNavLink(el)"
-                @click="sidebarShow = false"
+                :is="el.action ? 'label' : 'RouterLink'"
+                :for="el.action === 'account' && !walletStore.currentAddress ? 'VeronaConnectWallet' : undefined"
+                :to="el.action ? undefined : el.to"
+                @click="
+                  sidebarShow = false;
+                  if (el.action === 'account') openAccount();
+                "
                 class="hover:bg-active rounded cursor-pointer px-3 py-2 flex items-center"
                 :class="{
                   '!bg-primary': selected($route, el),
                 }"
-                :to="el.to"
               >
-                <Icon
-                  v-if="!el?.icon?.image"
-                  icon="mdi:chevron-right"
-                  class="mr-2 ml-3"
-                  :class="{
-                    'text-white':
-                      $route.path === el?.to?.path &&
-                      item?.title !== 'Favorite',
-                  }"
-                />
                 <img
                   v-if="el?.icon?.image"
                   :src="el?.icon?.image"
@@ -164,19 +210,41 @@ dayjs();
                 <div
                   class="text-base capitalize text-base-content"
                   :class="{
-                    '!text-white': selected($route, el),
+                    '!text-primary-content': selected($route, el),
                   }"
                 >
-                  {{ item?.title === 'Favorite' ? el?.title : $t(el?.title) }}
+                  {{ el.i18n === false || item?.title === 'Favorite' ? el?.title : $t(el?.title) }}
                 </div>
-              </RouterLink>
+              </component>
+              <details v-else-if="isNavGroup(el)" class="group" :open="groupSelected($route, el)">
+                <summary class="flex list-none cursor-pointer items-center justify-between px-3 py-2 text-base capitalize text-base-content">
+                  {{ $t(el.title) }}
+                  <Icon icon="mdi-chevron-down" class="transition-transform group-open:rotate-180" />
+                </summary>
+                <div>
+                  <RouterLink
+                    v-for="advancedItem in el.children"
+                    :key="advancedItem.title"
+                    @click="sidebarShow = false"
+                    class="hover:bg-active rounded cursor-pointer px-3 py-2 flex items-center"
+                    :class="{ '!bg-primary': isNavLink(advancedItem) && selected($route, advancedItem) }"
+                    :to="isNavLink(advancedItem) ? advancedItem.to : undefined"
+                  >
+                    <div class="ml-3 text-base capitalize text-base-content" :class="{ '!text-white': isNavLink(advancedItem) && selected($route, advancedItem) }">
+                      {{ $t(advancedItem.title) }}
+                    </div>
+                  </RouterLink>
+                </div>
+              </details>
             </div>
           </div>
         </div>
 
-        <RouterLink
+        <component
+          :is="item?.href ? 'a' : 'RouterLink'"
           v-if="isNavLink(item)"
           :to="item?.to"
+          :href="item?.href"
           @click="sidebarShow = false"
           class="cursor-pointer rounded-lg px-4 flex items-center py-2 hover:bg-active"
         >
@@ -206,13 +274,26 @@ dayjs();
           >
             {{ item?.badgeContent }}
           </div>
-        </RouterLink>
+        </component>
         <div
           v-if="isNavTitle(item)"
           class="px-4 text-sm text-base-content opacity-60 pb-2 uppercase"
         >
           {{ item?.heading }}
         </div>
+        </div>
+      </div>
+      <div class="mt-auto shrink-0 border-t border-gray-100 p-2 dark:border-gray-700">
+        <a
+          :href="otherNetwork.otherNetworkUrl"
+          class="cursor-pointer rounded-lg px-4 flex items-center py-2 hover:bg-active"
+          @click="sidebarShow = false"
+        >
+          <Icon icon="mdi-swap-horizontal" class="text-xl mr-2 text-blue-500" />
+          <div class="text-base capitalize flex-1 text-base-content whitespace-nowrap">
+            {{ otherNetwork.otherNetworkLabel }}
+          </div>
+        </a>
       </div>
     </div>
     <div class="xl:!ml-64 px-3 pt-4">
@@ -239,7 +320,7 @@ dayjs();
       </div>
 
       <!-- 👉 Pages -->
-      <div style="min-height: calc(100vh - 180px)">
+      <div style="min-height: calc(100vh - 180px)" @click.capture="redirectDisconnectedTransaction">
         <div v-if="behind" class="alert alert-error mb-4">
           <div class="flex gap-2">
             <svg
@@ -264,10 +345,84 @@ dayjs();
         </div>
         <RouterView v-slot="{ Component }">
           <Transition mode="out-in">
-            <Component :is="Component" />
+            <div class="verona-page" :class="{ 'verona-advanced-page': showAdvancedStats }">
+              <Component :is="Component" />
+            </div>
           </Transition>
         </RouterView>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.verona-advanced-page :deep(.tabs) {
+  margin-bottom: 1rem;
+  background: transparent;
+}
+
+.verona-advanced-page :deep(.tabs .tab) {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding-inline: 1rem;
+  text-transform: capitalize !important;
+}
+
+.verona-advanced-page :deep(.tabs .tab-active) {
+  border-radius: 0.75rem;
+}
+
+.verona-advanced-page :deep(.input),
+.verona-advanced-page :deep(.select) {
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
+.verona-page :deep(table) {
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: hsl(var(--b1));
+}
+
+.verona-page :deep(table thead th),
+.verona-page :deep(table thead td) {
+  background-color: #f1ece3;
+}
+
+html.dark .verona-page :deep(table thead th),
+html.dark .verona-page :deep(table thead td),
+html[data-theme='dark'] .verona-page :deep(table thead th),
+html[data-theme='dark'] .verona-page :deep(table thead td) {
+  background-color: #101a14;
+}
+
+.verona-page :deep(table th),
+.verona-page :deep(table thead td) {
+  color: hsl(var(--bc) / 0.65);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.verona-page :deep(table :where(th, td)) {
+  padding: 0.75rem;
+}
+
+.verona-page :deep(table tbody td) {
+  background-color: hsl(var(--b1));
+}
+
+.verona-page :deep(table tbody tr:hover td) {
+  background-color: var(--bg-active);
+}
+
+.verona-page :deep(.overflow-x-auto:has(> table)),
+.verona-page :deep(.overflow-auto:has(> table)),
+.verona-page :deep(.overflow-hidden:has(> table)) {
+  border-radius: 0.5rem;
+  background: hsl(var(--b1));
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+</style>

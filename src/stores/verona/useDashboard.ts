@@ -4,6 +4,9 @@ import type { ChainConfig, DirectoryChainConfig, Endpoint, LocalChainConfig } fr
 import { ConfigSource, NetworkType } from '@/types/chaindata';
 import { useBlockchain } from './useBlockchain';
 import { coingeckoUrl } from '@/stores';
+import localChainConfig from '@verona-chain-config';
+
+const veronaNetwork = __VERONA_ENVIRONMENT__.network === 'testnet' ? NetworkType.Testnet : NetworkType.Mainnet;
 
 function apiConverter(api: any[]) {
   if (!api) return [];
@@ -31,8 +34,14 @@ export function convertFromLocal(lc: LocalChainConfig): ChainConfig {
       symbol: x.symbol,
       logo_URIs: { svg: x.logo },
       coingecko_id: x.coingecko_id,
+      denom_aliases: x.denom_aliases || (x.base.startsWith('ibc/')
+        ? {
+            [x.base]: `${Number(x.exponent) === 6 ? 'u' : ''}${x.symbol.toLowerCase()}`,
+            [x.symbol.toLowerCase()]: x.symbol,
+          }
+        : undefined),
       exponent: x.exponent,
-      denom_units: [
+      denom_units: x.denom_units || [
         { denom: x.base, exponent: 0 },
         { denom: x.symbol.toLowerCase(), exponent: Number(x.exponent) },
       ],
@@ -45,6 +54,8 @@ export function convertFromLocal(lc: LocalChainConfig): ChainConfig {
   conf.bech32Prefix = lc.addr_prefix;
   conf.bech32ConsensusPrefix = lc.consensus_prefix ?? lc.addr_prefix + 'valcons';
   conf.chainName = lc.chain_name;
+  conf.chainId = lc.chain_id || lc.chain_name;
+  conf.registryChainName = lc.registry_chain_name;
   conf.networkType = lc.network_type;
   conf.coinType = lc.coin_type;
   conf.prettyName = lc.registry_name || lc.chain_name;
@@ -140,7 +151,7 @@ export enum LoadingStatus {
 
 export const useDashboard = defineStore('dashboard', {
   state: () => {
-    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"verona":true, "veronatestnet2":true}');
+    const favMap = JSON.parse(localStorage.getItem('favoriteMap') || '{"verona":true}');
     return {
       status: LoadingStatus.Empty,
       source: ConfigSource.MainnetCosmosDirectory,
@@ -202,35 +213,18 @@ export const useDashboard = defineStore('dashboard', {
       }
     },
     async loadingFromLocal() {
-      if (window.location.hostname.search('testnet') > -1) {
-        this.networkType = NetworkType.Testnet;
-      }
-      const source: Record<string, LocalChainConfig> =
-        this.networkType === NetworkType.Mainnet
-          ? import.meta.glob('../../../chains/verona/*.json', { eager: true })
-          : import.meta.glob('../../../chains/verona/*.json', { eager: true });
-      Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
-        this.chains[x.chain_name] = convertFromLocal(x);
-        if (!this.chains[x.chain_name].networkType) {
-          this.chains[x.chain_name].networkType = this.networkType;
-        }
-      });
+      this.networkType = veronaNetwork;
+      const chain = convertFromLocal(localChainConfig);
+      if (!chain.networkType) chain.networkType = this.networkType;
+      this.chains[chain.chainName] = chain;
       this.setupDefault();
       this.status = LoadingStatus.Loaded;
     },
     async loadLocalConfig(network: NetworkType) {
-      const config: Record<string, ChainConfig> = {};
-      const source: Record<string, LocalChainConfig> =
-        network === NetworkType.Mainnet
-          ? import.meta.glob('../../../chains/verona/*.json', { eager: true })
-          : import.meta.glob('../../../chains/verona/*.json', { eager: true });
-      Object.values<LocalChainConfig>(source).forEach((x: LocalChainConfig) => {
-        config[x.chain_name] = convertFromLocal(x);
-        if (!config[x.chain_name].networkType) {
-          config[x.chain_name].networkType = network.toLowerCase();
-        }
-      });
-      return config;
+      if (network !== veronaNetwork) return {};
+      const chain = convertFromLocal(localChainConfig);
+      if (!chain.networkType) chain.networkType = network.toLowerCase();
+      return { [chain.chainName]: chain } as Record<string, ChainConfig>;
     },
     setupDefault() {
       if (this.length > 0) {

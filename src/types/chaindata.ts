@@ -20,7 +20,9 @@ export enum EndpointType {
 }
 
 export interface Chain extends RegistryChain {}
-export interface Asset extends RegistryAsset {}
+export interface Asset extends RegistryAsset {
+  denom_aliases?: Record<string, string>;
+}
 export interface Endpoint extends RegistryEndPoint {}
 export interface DenomUnit extends RegistryDenomUnit {}
 
@@ -36,11 +38,15 @@ export interface LocalChainConfig {
   assets: {
     base: string;
     coingecko_id: string;
+    denom_aliases?: Record<string, string>;
+    denom_units?: { denom: string; exponent: number }[];
     exponent: string;
     logo: string;
     symbol: string;
   }[];
   chain_name: string;
+  chain_id?: string;
+  registry_chain_name?: string;
   network_type?: string;
   coin_type: string;
   logo: string;
@@ -108,6 +114,7 @@ export interface ChainConfig {
   bech32Prefix: string;
   bech32ConsensusPrefix: string;
   chainId: string;
+  registryChainName?: string;
   coinType: string;
   assets: Asset[];
   themeColor?: string;

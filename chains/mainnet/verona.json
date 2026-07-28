@@ -1,35 +1,20 @@
 {
   "chain_name": "verona",
   "chain_id": "xion-mainnet-1",
+  "registry_chain_name": "xion",
   "registry_name": "Verona",
   "coingecko": "xion",
   "network_type": "mainnet",
   "rpc": [
     {
-      "address": "https://verona-rpc.polkachu.com",
-      "provider": "Polkachu"
-    },
-    {
       "address": "https://rpc.xion-mainnet-1.burnt.com",
       "provider": "🔥BurntLabs🔥"
-    },
-    {
-      "address": "https://rpc-burnt.imperator.co/",
-      "provider": "Imperator.co"
     }
   ],
   "api": [
     {
-      "address": "https://verona-api.polkachu.com",
-      "provider": "Polkachu"
-    },
-    {
       "address": "https://api.xion-mainnet-1.burnt.com",
       "provider": "🔥BurntLabs🔥"
-    },
-    {
-      "address": "https://lcd-burnt.imperator.co/",
-      "provider": "Imperator.co"
     }
   ],
   "snapshot_provider": "",
@@ -44,6 +29,12 @@
       "base": "uxion",
       "symbol": "VERONA",
       "exponent": "6",
+      "denom_aliases": { "uxion": "uverona", "mxion": "mverona", "verona": "VERONA" },
+      "denom_units": [
+        { "denom": "uxion", "exponent": 0 },
+        { "denom": "mxion", "exponent": 3 },
+        { "denom": "verona", "exponent": 6 }
+      ],
       "coingecko_id": "xion-2",
       "logo": "/verona.png"
     },
@@ -51,12 +42,28 @@
       "base": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc",
       "symbol": "SBC",
       "exponent": "6",
+      "denom_aliases": {
+        "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc": "usbc",
+        "sbc": "SBC"
+      },
+      "denom_units": [
+        { "denom": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc", "exponent": 0 },
+        { "denom": "sbc", "exponent": 6 }
+      ],
       "logo": "https://brale.network/logos/valuetype/sbc.svg"
     },
     {
       "base": "ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B",
       "symbol": "OSMO",
       "exponent": "6",
+      "denom_aliases": {
+        "ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B": "uosmo",
+        "osmo": "OSMO"
+      },
+      "denom_units": [
+        { "denom": "ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B", "exponent": 0 },
+        { "denom": "osmo", "exponent": 6 }
+      ],
       "coingecko_id": "osmosis",
       "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.png"
     },
@@ -71,6 +78,14 @@
       "base": "ibc/CC7B293B3F08EA7DB96AFD4765BD0C7F95ABD7ECEAF21C74F3ACCBF7CEFB6591",
       "symbol": "OSMO",
       "exponent": "6",
+      "denom_aliases": {
+        "ibc/CC7B293B3F08EA7DB96AFD4765BD0C7F95ABD7ECEAF21C74F3ACCBF7CEFB6591": "uosmo",
+        "osmo": "OSMO"
+      },
+      "denom_units": [
+        { "denom": "ibc/CC7B293B3F08EA7DB96AFD4765BD0C7F95ABD7ECEAF21C74F3ACCBF7CEFB6591", "exponent": 0 },
+        { "denom": "osmo", "exponent": 6 }
+      ],
       "coingecko_id": "osmosis",
       "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.png"
     },
@@ -139,18 +154,16 @@
     }
   ],
   "features": [
+    "account",
     "dashboard",
     "staking",
     "governance",
-    "tx",
     "blocks",
-    "ibc",
+    "tx",
     "supply",
-    "uptime",
-    "consensus",
+    "ibc",
     "cosmwasm",
-    "parameters",
-    "account"
+    "parameters"
   ],
   "keplr_features": [
     "ibc-go",

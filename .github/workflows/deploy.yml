@@ -10,10 +10,18 @@ permissions:
 
 jobs:
   deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - network: mainnet
+            url: https://explorer.burnt.com
+          - network: testnet
+            url: https://explorer.testnet.burnt.com
     runs-on: ubuntu-latest
     environment:
-      name: production
-      url: https://explorer.burnt.com
+      name: ${{ matrix.network }}
+      url: ${{ matrix.url }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -23,7 +31,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       # .env* is gitignored, so without this block the build silently falls back to the
       # hardcoded defaults in the source. Override any of these via repository variables.
-      - run: yarn build
+      - run: yarn build:${{ matrix.network }}
         env:
           VITE_REFRESH_INTERVAL: ${{ vars.VITE_REFRESH_INTERVAL || '6000' }}
           VITE_FETCH_ALL_BLOCKS: ${{ vars.VITE_FETCH_ALL_BLOCKS || 'false' }}
@@ -37,5 +45,5 @@ jobs:
         with:
           apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          command: deploy --env ${{ matrix.network }}
           packageManager: yarn
