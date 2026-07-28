@@ -2,7 +2,7 @@
   "module": {
     "dashboard": "Dasbor",
     "blocks": "Kumpulan Blok",
-    "staking": "Staking",
+    "staking": "Validator",
     "governance": "Tata Kelola",
     "parameters": "Parameter",
     "uptime": "Pemantauan",

@@ -2,7 +2,7 @@
   "module": {
     "dashboard": "Dashboard",
     "blocks": "Blocks",
-    "staking": "Staking",
+    "staking": "Validators",
     "governance": "Governance",
     "parameters": "Parameters",
     "uptime": "Uptime",

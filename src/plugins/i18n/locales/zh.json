@@ -2,7 +2,7 @@
   "module": {
     "dashboard": "面板首页",
     "blocks": "区块和交易",
-    "staking": "质押生息",
+    "staking": "验证人",
     "governance": "社区治理",
     "parameters": "参数",
     "uptime": "状态",

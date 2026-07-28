@@ -2,7 +2,7 @@
   "module": {
     "dashboard": "대시보드",
     "blocks": "블록",
-    "staking": "스테이킹",
+    "staking": "검증인",
     "governance": "거버넌스",
     "parameters": "파라미터",
     "uptime": "업타임",

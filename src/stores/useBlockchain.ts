@@ -74,6 +74,8 @@ export const useBlockchain = defineStore('blockchain', {
             badgeClass: 'bg-error',
             children: routes
               .filter((x) => x.meta.i18n) // defined menu name
+              // Uptime and consensus live under the staking/validators page tabs.
+              .filter((x) => !['uptime', 'consensus'].includes(String(x.meta.i18n)))
               .filter((x) => !this.current?.features || this.current.features.includes(String(x.meta.i18n))) // filter none-custom module
               .map((x) => ({
                 title: `module.${x.meta.i18n}`,

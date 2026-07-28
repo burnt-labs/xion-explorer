@@ -2,7 +2,7 @@
   "module": {
     "dashboard": "Panel de control",
     "blocks": "Bloques",
-    "staking": "Staking",
+    "staking": "Validadores",
     "governance": "Gobernanza",
     "parameters": "Parámetros",
     "uptime": "Tiempo en línea",
