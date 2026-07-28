@@ -79,6 +79,31 @@ html[data-theme='dark'] {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
 }
 
+/* Keep explorer tabs and form controls at a consistent touch-friendly size. */
+.tabs.tabs-boxed {
+  margin-bottom: 1rem;
+  background: transparent;
+}
+
+.tabs.tabs-boxed .tab {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding-inline: 1rem;
+  text-transform: capitalize;
+}
+
+.tabs.tabs-boxed .tab-active {
+  border-radius: 0.75rem;
+}
+
+.input.input-sm,
+.select.select-sm,
+.input.input-bordered.input-sm,
+.select.select-bordered.select-sm {
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.25s ease-out;
