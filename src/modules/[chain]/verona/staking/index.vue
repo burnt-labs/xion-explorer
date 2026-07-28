@@ -1,0 +1,502 @@
+<script lang="ts" setup>
+import { useBaseStore, useBlockchain, useFormatter, useStakingStore, useTxDialog } from '@/stores';
+import { computed } from '@vue/reactivity';
+import { onMounted, ref } from 'vue';
+import { Icon } from '@iconify/vue';
+import type { Key, SigningInfo, SlashingParam, Validator } from '@/types';
+import { consensusPubkeyToHexAddress, valconsToBase64 } from '@/libs';
+import { diff } from 'semver';
+import { fromHex, toBase64 } from '@cosmjs/encoding';
+import { useRouter } from 'vue-router';
+import UptimeView from './UptimeView.vue';
+import ConsensusView from '../../consensus/index.vue';
+
+const staking = useStakingStore();
+const base = useBaseStore();
+const format = useFormatter();
+const dialog = useTxDialog();
+const chainStore = useBlockchain();
+const router = useRouter();
+
+const openValidator = (operatorAddress: string) =>
+  router.push({
+    name: 'chain-verona-staking-validator',
+    params: { chain: chainStore.chainName, validator: operatorAddress },
+  });
+
+const cache = JSON.parse(localStorage.getItem('avatars') || '{}');
+const avatars = ref(cache || {});
+const latest = ref({} as Record<string, number>);
+const yesterday = ref({} as Record<string, number>);
+const tab = ref('active');
+const validatorFilter = ref('');
+const unbondList = ref([] as Validator[]);
+const slashing = ref({} as SlashingParam);
+const signingInfo = ref({} as Record<string, SigningInfo>);
+
+onMounted(() => {
+  staking.fetchUnbondingValdiators().then((res) => {
+    unbondList.value = res.concat(unbondList.value);
+  });
+  staking.fetchInacitveValdiators().then((res) => {
+    unbondList.value = unbondList.value.concat(res);
+  });
+  chainStore.rpc.getSlashingParams().then((res) => {
+    slashing.value = res.params;
+  });
+  chainStore.rpc.getSlashingSigningInfos().then((res) => {
+    res.info?.forEach((info) => {
+      signingInfo.value[valconsToBase64(info.address)] = info;
+    });
+  });
+});
+
+async function fetchChange(blockWindow: number = 14400) {
+  let page = 0;
+
+  let height = Number(base.latest?.block?.header?.height || 0);
+  if (height > blockWindow) {
+    height -= blockWindow;
+  } else {
+    height = 1;
+  }
+  // voting power in 24h ago
+  while (page < staking.validators.length && height > 0) {
+    await base.fetchValidatorByHeight(height, page).then((x) => {
+      x.validators.forEach((v) => {
+        yesterday.value[v.pub_key.key] = Number(v.voting_power);
+      });
+    });
+    page += 100;
+  }
+
+  page = 0;
+  // voting power for now
+  while (page < staking.validators.length) {
+    await base.fetchLatestValidators(page).then((x) => {
+      x.validators.forEach((v) => {
+        latest.value[v.pub_key.key] = Number(v.voting_power);
+      });
+    });
+    page += 100;
+  }
+}
+
+const changes = computed(() => {
+  const changes = {} as Record<string, number>;
+  Object.keys(latest.value).forEach((k) => {
+    const l = latest.value[k] || 0;
+    const y = yesterday.value[k] || 0;
+    changes[k] = l - y;
+  });
+  return changes;
+});
+
+const change24 = (entry: { consensus_pubkey: Key; tokens: string }) => {
+  const txt = entry.consensus_pubkey.key;
+  // const n: number = latest.value[txt];
+  // const o: number = yesterday.value[txt];
+  // // console.log( txt, n, o)
+  // return n > 0 && o > 0 ? n - o : 0;
+
+  const latestValue = latest.value[txt];
+  if (!latestValue) {
+    return 0;
+  }
+
+  const displayTokens = format.tokenAmountNumber({
+    amount: parseInt(entry.tokens, 10).toString(),
+    denom: staking.params.bond_denom,
+  });
+  const coefficient = displayTokens / latestValue;
+  return changes.value[txt] * coefficient;
+};
+
+const change24Text = (entry: { consensus_pubkey: Key; tokens: string }) => {
+  if (!entry) return '';
+  const v = change24(entry);
+  return v && v !== 0 ? format.showChanges(v) : '';
+};
+
+const change24Color = (entry: { consensus_pubkey: Key; tokens: string }) => {
+  if (!entry) return '';
+  const v = change24(entry);
+  if (v > 0) return 'text-success';
+  if (v < 0) return 'text-error';
+};
+
+const calculateRank = function (position: number) {
+  let sum = 0;
+  for (let i = 0; i < position; i++) {
+    sum += Number(staking.validators[i]?.delegator_shares);
+  }
+  const percent = sum / staking.totalPower;
+
+  switch (true) {
+    case tab.value === 'active' && percent < 0.33:
+      return 'error';
+    case tab.value === 'active' && percent < 0.67:
+      return 'warning';
+    default:
+      return 'primary';
+  }
+};
+
+function isFeatured(endpoints: string[], who?: { website?: string; moniker: string }) {
+  if (!endpoints || !who) return false;
+  return (
+    endpoints.findIndex(
+      (x) =>
+        (who.website && who.website?.substring(0, who.website?.lastIndexOf('.')).endsWith(x)) ||
+        who?.moniker?.toLowerCase().search(x.toLowerCase()) > -1
+    ) > -1
+  );
+}
+
+const list = computed(() => {
+  const matchesFilter = (validator: Validator) =>
+    validator.description.moniker.toLowerCase().includes(validatorFilter.value.trim().toLowerCase());
+  if (tab.value === 'active') {
+    return staking.validators
+      .filter(matchesFilter)
+      .map((x, i) => ({ v: x, rank: calculateRank(i), logo: logo(x.description.identity) }));
+  } else if (tab.value === 'featured') {
+    const endpoint = chainStore.current?.endpoints?.rest?.map((x) => x.provider);
+    if (endpoint) {
+      endpoint.push('ping');
+      return staking.validators
+        .filter((x) => isFeatured(endpoint.filter(Boolean) as string[], x.description))
+        .map((x, i) => ({ v: x, rank: 'primary', logo: logo(x.description.identity) }));
+    }
+    return [];
+  }
+  return unbondList.value
+    .filter(matchesFilter)
+    .map((x) => ({ v: x, rank: 'neutral', logo: logo(x.description.identity) }));
+});
+
+const statsList = computed(() => {
+  const validators = [...staking.validators, ...unbondList.value];
+  return validators
+    .filter((validator, index) => validators.findIndex((entry) => entry.operator_address === validator.operator_address) === index)
+    .map((validator, index) => {
+      const consensusAddress = toBase64(fromHex(consensusPubkeyToHexAddress(validator.consensus_pubkey)));
+      const signing = signingInfo.value[consensusAddress];
+      const window = Number(slashing.value.signed_blocks_window || 0);
+      const uptime = signing && window > 0 ? (window - Number(signing.missed_blocks_counter)) / window : undefined;
+      return { validator, signing, uptime, logo: logo(validator.description.identity), rank: index + 1 };
+    })
+    .filter(({ validator }) =>
+      validator.description.moniker.toLowerCase().includes(validatorFilter.value.trim().toLowerCase())
+    );
+});
+
+const fetchAvatar = (identity: string) => {
+  // fetch avatar from keybase
+  return new Promise<void>((resolve) => {
+    staking
+      .keybase(identity)
+      .then((d) => {
+        if (Array.isArray(d.them) && d.them.length > 0) {
+          const uri = String(d.them[0]?.pictures?.primary?.url).replace(
+            'https://s3.amazonaws.com/keybase_processed_uploads/',
+            ''
+          );
+
+          avatars.value[identity] = uri;
+          resolve();
+        } else throw new Error(`failed to fetch avatar for ${identity}`);
+      })
+      .catch((error) => {
+        // console.error(error); // uncomment this if you want the user to see which avatars failed to load.
+        resolve();
+      });
+  });
+};
+
+const loadAvatar = (identity: string) => {
+  // fetches avatar from keybase and stores it in localStorage
+  fetchAvatar(identity).then(() => {
+    localStorage.setItem('avatars', JSON.stringify(avatars.value));
+  });
+};
+
+const loadAvatars = () => {
+  // fetches all avatars from keybase and stores it in localStorage
+  const promises = staking.validators.map((validator) => {
+    const identity = validator.description?.identity;
+
+    // Here we also check whether we haven't already fetched the avatar
+    if (identity && !avatars.value[identity]) {
+      return fetchAvatar(identity);
+    } else {
+      return Promise.resolve();
+    }
+  });
+
+  Promise.all(promises).then(() => localStorage.setItem('avatars', JSON.stringify(avatars.value)));
+};
+
+const logo = (identity?: string) => {
+  if (!identity || !avatars.value[identity]) return '';
+  const url = avatars.value[identity] || '';
+  return url.startsWith('http') ? url : `https://s3.amazonaws.com/keybase_processed_uploads/${url}`;
+};
+
+const loaded = ref(false);
+base.$subscribe((_, s) => {
+  if (s.recents.length >= 2 && loaded.value === false) {
+    loaded.value = true;
+    const diff_time = Date.parse(s.recents[1].block.header.time) - Date.parse(s.recents[0].block.header.time);
+    const diff_height = Number(s.recents[1].block.header.height) - Number(s.recents[0].block.header.height);
+    const block_window = Number(Number((86400 * 1000 * diff_height) / diff_time).toFixed(0));
+    fetchChange(block_window);
+  }
+});
+
+loadAvatars();
+</script>
+<template>
+  <div>
+    <div>
+      <div class="flex items-center justify-between py-1">
+        <div class="tabs tabs-boxed bg-transparent">
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'active' }" @click="tab = 'active'">{{
+            $t('staking.active')
+          }}</a>
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'inactive' }" @click="tab = 'inactive'">{{
+            $t('staking.inactive')
+          }}</a>
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'stats' }" @click="tab = 'stats'">Stats</a>
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'uptime' }" @click="tab = 'uptime'">Uptime</a>
+          <a class="tab text-base-content/60" :class="{ 'tab-active': tab === 'consensus' }" @click="tab = 'consensus'">Consensus</a>
+        </div>
+
+        <div v-if="tab === 'active' || tab === 'inactive'" class="text-lg font-semibold">
+          {{ list.length }}/{{ staking.params.max_validators }}
+        </div>
+      </div>
+
+      <div v-if="tab !== 'consensus'" class="mb-4">
+        <input
+          v-model="validatorFilter"
+          type="search"
+          placeholder="Filter validators"
+          class="input input-sm h-10 w-full border border-base-300 bg-base-100 px-4 focus:border-primary"
+        />
+      </div>
+
+      <div v-if="tab === 'active' || tab === 'inactive'">
+        <div class="overflow-x-auto rounded-lg bg-base-100">
+          <table class="table staking-table w-full">
+            <thead>
+              <tr>
+                <th scope="col" class="uppercase" style="width: 3rem; position: relative">
+                  {{ $t('staking.rank') }}
+                </th>
+                <th scope="col" class="uppercase">{{ $t('staking.validator') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('staking.voting_power') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('staking.24h_changes') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('staking.commission') }}</th>
+                <th scope="col" class="text-center uppercase">{{ $t('staking.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="({ v, rank, logo }, i) in list"
+                :key="v.operator_address"
+                class="hover:bg-active cursor-pointer"
+                tabindex="0"
+                @click="openValidator(v.operator_address)"
+                @keydown.enter="openValidator(v.operator_address)"
+              >
+                <!-- 👉 rank -->
+                <td>
+                  <div class="text-xs truncate relative px-2 py-1 rounded-full w-fit" :class="`text-${rank}`">
+                    <span class="inset-x-0 inset-y-0 opacity-10 absolute" :class="`bg-${rank}`"></span>
+                    {{ i + 1 + (tab === 'inactive' ? staking.validators.length : 0) }}
+                  </div>
+                </td>
+                <!-- 👉 Validator -->
+                <td>
+                  <div class="flex items-center overflow-hidden" style="max-width: 300px">
+                    <div class="avatar mr-4 relative w-8 h-8 rounded-full">
+                      <div class="w-8 h-8 rounded-full bg-base-content absolute opacity-10"></div>
+                      <div class="w-8 h-8 rounded-full">
+                        <img
+                          v-if="logo"
+                          :src="logo"
+                          class="object-contain"
+                          @error="
+                            (e) => {
+                              const identity = v.description?.identity;
+                              if (identity) loadAvatar(identity);
+                            }
+                          "
+                        />
+                        <Icon v-else class="text-3xl" :icon="`mdi-help-circle-outline`" />
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col">
+                      <span class="text-sm text-primary dark:invert whitespace-nowrap overflow-hidden font-weight-medium">
+                        {{ v.description?.moniker }}
+                      </span>
+                      <span class="text-xs">{{ v.description?.website || v.description?.identity || '-' }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- 👉 Voting Power -->
+                <td class="text-right">
+                  <div class="flex flex-col">
+                    <h6 class="text-sm font-weight-medium whitespace-nowrap">
+                      {{
+                        format.formatToken(
+                          {
+                            amount: parseInt(v.tokens).toString(),
+                            denom: staking.params.bond_denom,
+                          },
+                          true,
+                          '0,0'
+                        )
+                      }}
+                    </h6>
+                    <span class="text-xs">{{ format.calculatePercent(v.delegator_shares, staking.totalPower) }}</span>
+                  </div>
+                </td>
+                <!-- 👉 24h Changes -->
+                <td class="text-right text-xs" :class="change24Color(v)">
+                  {{ change24Text(v) }}
+                </td>
+                <!-- 👉 commission -->
+                <td class="text-right text-xs">
+                  {{ format.formatCommissionRate(v.commission?.commission_rates?.rate) }}
+                </td>
+                <!-- 👉 Action -->
+                <td class="text-center">
+                  <div class="flex justify-center items-center gap-2">
+                    <div v-if="v.jailed" class="badge bg-brick border-brick gap-2 text-linen">
+                      {{ $t('staking.jailed') }}
+                    </div>
+                    <label
+                      v-if="!v.jailed"
+                      for="delegate"
+                      class="btn !btn-xs !btn-primary btn-ghost rounded-sm capitalize"
+                      @click.stop="
+                        dialog.open('delegate', {
+                          validator_address: v.operator_address,
+                        })
+                      "
+                      >{{ $t('account.btn_delegate') }}</label
+                    >
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex flex-row items-center">
+          <div class="text-xs truncate relative py-2 px-4 rounded-md w-fit text-error mr-2">
+            <span class="inset-x-0 inset-y-0 opacity-10 absolute bg-error"></span>
+            {{ $t('staking.top') }} 33%
+          </div>
+          <div class="text-xs truncate relative py-2 px-4 rounded-md w-fit text-warning">
+            <span class="inset-x-0 inset-y-0 opacity-10 absolute bg-warning"></span>
+            {{ $t('staking.top') }} 67%
+          </div>
+          <div class="text-xs hidden md:!block pl-2">
+            {{ $t('staking.description') }}
+          </div>
+        </div>
+      </div>
+      <div v-else-if="tab === 'stats'">
+        <div class="overflow-x-auto rounded-lg bg-base-100">
+          <table class="table staking-table w-full">
+            <thead>
+              <tr>
+                <th scope="col" class="uppercase" style="width: 3rem">{{ $t('staking.rank') }}</th>
+                <th scope="col" class="uppercase">{{ $t('staking.validator') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('uptime.start_height') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('module.uptime') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('uptime.signed_precommits') }}</th>
+                <th scope="col" class="text-right uppercase">{{ $t('uptime.missing_blocks') }}</th>
+                <th scope="col" class="uppercase">{{ $t('uptime.last_jailed_time') }}</th>
+                <th scope="col" class="text-center uppercase">{{ $t('uptime.tombstoned') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="({ validator, signing, uptime, logo, rank }) in statsList"
+                :key="validator.operator_address"
+                class="hover:bg-active cursor-pointer"
+                tabindex="0"
+                @click="openValidator(validator.operator_address)"
+                @keydown.enter="openValidator(validator.operator_address)"
+              >
+                <td>
+                  <div class="text-xs rounded-full px-2 py-1 w-fit text-primary bg-primary/10">{{ rank }}</div>
+                </td>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <div class="avatar relative h-8 w-8 rounded-full">
+                      <div class="h-8 w-8 rounded-full bg-base-content opacity-10"></div>
+                      <img v-if="logo" :src="logo" class="absolute inset-0 h-8 w-8 rounded-full object-contain" />
+                    </div>
+                    <span class="text-sm text-primary">{{ validator.description.moniker }}</span>
+                  </div>
+                </td>
+                <td class="text-right">{{ signing?.start_height || '-' }}</td>
+                <td class="text-right" :class="uptime !== undefined && uptime > 0.95 ? 'text-success' : 'text-error'">
+                  {{ uptime === undefined ? '-' : format.percent(uptime) }}
+                </td>
+                <td class="text-right">
+                  <span v-if="signing && Number(base.latest?.block?.header?.height) > Number(signing.start_height)">
+                    {{
+                      format.percent(
+                        Number(signing.index_offset) /
+                          (Number(base.latest?.block?.header?.height) - Number(signing.start_height))
+                      )
+                    }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
+                <td class="text-right">{{ signing?.missed_blocks_counter || '-' }}</td>
+                <td>
+                  <span
+                    v-if="signing && !signing.jailed_until.startsWith('1970')"
+                    class="tooltip"
+                    :data-tip="format.toDay(signing.jailed_until, 'long')"
+                  >
+                    {{ format.toDay(signing.jailed_until, 'from') }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
+                <td class="text-center capitalize">{{ signing ? String(signing.tombstoned) : '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <UptimeView
+        v-else-if="tab === 'uptime'"
+        :chain="chainStore.chainName"
+        :filter-text="validatorFilter"
+        embedded
+        view="blocks"
+      />
+      <ConsensusView v-else-if="tab === 'consensus'" />
+    </div>
+  </div>
+</template>
+
+<route>
+  {
+    path: '/:chain/staking',
+    meta: {
+      i18n: 'staking',
+      order: 3
+    }
+  }
+</route>

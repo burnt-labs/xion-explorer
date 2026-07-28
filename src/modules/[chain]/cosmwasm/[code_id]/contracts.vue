@@ -11,22 +11,43 @@ const props = defineProps(['code_id', 'chain']);
 
 const pageRequest = ref(new PageRequest());
 const response = ref({} as PaginabledContracts);
+const contractInfo = ref<Record<string, ContractInfo>>({});
+const currentPage = ref(1);
+const pageKeys = ref<Record<number, string | undefined>>({ 1: undefined });
 
 const info = ref({} as ContractInfo);
 const dialog = useTxDialog();
 const infoDialog = ref(false);
 const wasmStore = useWasmStore();
+async function loadContractInfo(addresses: string[]) {
+  const entries = await Promise.all(
+    addresses.map(async (address) => {
+      const result = await wasmStore.wasmClient.getWasmContracts(address);
+      return [address, result.contract_info] as const;
+    })
+  );
+  contractInfo.value = Object.fromEntries(entries);
+}
+
 function loadContract(pageNum: number) {
   const pr = new PageRequest();
-  pr.setPage(pageNum);
   if (String(props.code_id).search(/^[\d]+$/) > -1) {
-    // query with code id
-    wasmStore.wasmClient.getWasmCodeContracts(props.code_id, pr).then((x) => {
+    // CosmWasm code-contract queries support key pagination, but reject
+    // pagination.count_total and offset when they are combined.
+    pr.count_total = false;
+    pr.key = pageKeys.value[pageNum];
+    wasmStore.wasmClient.getWasmCodeContracts(props.code_id, pr).then(async (x) => {
+      await loadContractInfo(x.contracts || []);
       response.value = x;
+      currentPage.value = pageNum;
+      if (x.pagination?.next_key) pageKeys.value[pageNum + 1] = x.pagination.next_key;
     });
   } else {
     // query by creator
-    wasmStore.wasmClient.getWasmContractsByCreator(props.code_id, pr).then((x) => {
+    pr.count_total = false;
+    pr.setPage(pageNum);
+    wasmStore.wasmClient.getWasmContractsByCreator(props.code_id, pr).then(async (x) => {
+      await loadContractInfo(x.contract_addresses || []);
       response.value = {
         contracts: x.contract_addresses,
         pagination: x.pagination,
@@ -53,12 +74,16 @@ function showInfo(address: string) {
               <th style="position: relative; z-index: 2">
                 {{ $t('cosmwasm.contract_list') }}
               </th>
+              <th>Code ID</th>
+              <th>Block Height</th>
               <th>{{ $t('account.action') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(v, index) in response.contracts" :key="index" class="hover">
               <td>{{ v }}</td>
+              <td>{{ contractInfo[v]?.code_id }}</td>
+              <td>{{ contractInfo[v]?.created?.block_height }}</td>
               <td>
                 <label @click="showInfo(v)" for="modal-contract-detail" class="btn btn-primary btn-xs text-xs mr-2">{{
                   $t('cosmwasm.btn_contract')
@@ -71,7 +96,24 @@ function showInfo(address: string) {
           </tbody>
         </table>
         <div class="flex justify-between">
-          <PaginationBar :limit="pageRequest.limit" :total="response.pagination?.total" :callback="loadContract" />
+          <div v-if="String(props.code_id).search(/^[\d]+$/) > -1" class="my-5 flex gap-2">
+            <button class="btn bg-base-200" :disabled="currentPage === 1" @click="loadContract(currentPage - 1)">
+              Previous
+            </button>
+            <button
+              class="btn bg-base-200"
+              :disabled="!response.pagination?.next_key"
+              @click="loadContract(currentPage + 1)"
+            >
+              Next
+            </button>
+          </div>
+          <PaginationBar
+            v-else
+            :limit="pageRequest.limit"
+            :total="response.pagination?.total"
+            :callback="loadContract"
+          />
           <label
             for="wasm_instantiate_contract"
             class="btn btn-primary my-5"

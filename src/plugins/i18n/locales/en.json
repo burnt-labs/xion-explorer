@@ -1,13 +1,14 @@
 {
   "module": {
+    "advanced": "Advanced",
     "dashboard": "Dashboard",
     "blocks": "Blocks",
-    "staking": "Staking",
+    "staking": "Validators",
     "governance": "Governance",
     "parameters": "Parameters",
     "uptime": "Uptime",
     "state-sync": "State Sync",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "Contracts",
     "widget": "Widgets",
     "tx": "Transactions",
     "ibc": "IBC",
@@ -105,7 +106,7 @@
     "tips_description_2": "If you want to change the default rpc endpoint. make sure that `https` and `CORS` are enabled on your server."
   },
   "cosmwasm": {
-    "title": "Cosmos Wasm Smart Contracts",
+    "title": "Smart Contracts (CosmWasm)",
     "code_id": "Code Id",
     "code_hash": "Code Hash",
     "creator": "Creator",

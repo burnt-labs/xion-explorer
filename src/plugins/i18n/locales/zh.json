@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "高级",
     "dashboard": "面板首页",
     "blocks": "区块和交易",
     "staking": "质押生息",
@@ -10,7 +11,7 @@
     "supply": "资产供应量",
     "account": "账户列表",
     "state-sync": "状态同步",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "合约",
     "widget": "Widgets",
     "tx": "交易",
     "ibc": "IBC",

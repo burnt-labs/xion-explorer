@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { ChainConfig, Endpoint } from '@/types/chaindata';
-import type { NavGroup, NavLink, NavSectionTitle, VerticalNavItems } from '@/layouts/types';
+import type { NavGroup, NavLink, VerticalNavItems } from '@/layouts/types';
 import { useRouter } from 'vue-router';
 import { CosmosRestClient } from '@/libs/client';
 import {
@@ -14,8 +14,11 @@ import {
   useWalletStore,
 } from '@/stores';
 import { useBlockModule } from '@/modules/[chain]/block/block';
-import { hexToRgb, rgbToHsl } from '@/libs/utils';
 
+type VeronaNavLink = NavLink & {
+  action?: 'account';
+  module?: string;
+};
 // Consecutive failed block polls before switching to the next configured REST endpoint.
 const FAILOVER_AFTER_FAILURES = 3;
 
@@ -56,15 +59,39 @@ export const useBlockchain = defineStore('blockchain', {
     },
     computedChainMenu() {
       let currNavItem: VerticalNavItems = [];
+      const advancedModules = new Set(['staking', 'governance', 'blocks', 'tx', 'supply', 'ibc', 'cosmwasm', 'parameters']);
       const router = useRouter();
       const routes = router?.getRoutes() || [];
       if (this.current && routes) {
-        // Primary belongs to the theme (Sea in light, Sky in dark) so it stays
-        // legible on both surfaces. The chain accent is applied per-chain to the
-        // network badge/eyebrow instead, which is where mainnet vs testnet needs
-        // to read - overriding --p here would force one accent onto both themes.
+        // The theme primary stays readable on both backgrounds; use the Verona
+        // network accent only in the network label.
         document.body.style.removeProperty('--p');
         document.body.style.removeProperty('--bc');
+        const modules = routes
+          .filter((x) => x.meta.i18n) // defined menu name
+          .filter((x) => !this.current?.features || this.current.features.includes(String(x.meta.i18n))) // filter none-custom module
+          .sort((a, b) => a.path.length - b.path.length)
+          .map((x) => ({
+            title: `module.${x.meta.i18n}`,
+            to: { path: x.path.replace(':chain', this.chainName) },
+            icon: { icon: 'mdi-chevron-right', size: '22' },
+            i18n: true,
+            order: Number(this.current?.features?.indexOf(String(x.meta.i18n)) ?? 100),
+            module: String(x.meta.i18n),
+          }))
+          .filter((item, index, items) => items.findIndex((candidate) => candidate.module === item.module) === index)
+          .sort((a, b) => a.order - b.order);
+        const advanced = modules.filter((item) => advancedModules.has(item.module)) as VeronaNavLink[];
+        // The account pages intentionally have no route i18n metadata: the
+        // generic account index is an explorer listing, while the sidebar
+        // entry is a wallet action. Add that action directly so it is present
+        // whenever the active Verona config enables the account feature.
+        const account = this.current.features?.includes('account')
+          ? ({ title: 'Account', action: 'account', i18n: false } as VeronaNavLink)
+          : undefined;
+        const primary = modules.filter((item) => !advancedModules.has(item.module) && item.module !== 'account') as VeronaNavLink[];
+        const primaryWithoutDashboard = primary.filter((item) => item.module !== 'dashboard');
+
         currNavItem = [
           {
             title: this.current?.prettyName || this.chainName || '',
@@ -72,58 +99,17 @@ export const useBlockchain = defineStore('blockchain', {
             i18n: false,
             badgeContent: this.isConsumerChain ? 'Consumer' : undefined,
             badgeClass: 'bg-error',
-            children: routes
-              .filter((x) => x.meta.i18n) // defined menu name
-              .filter((x) => !this.current?.features || this.current.features.includes(String(x.meta.i18n))) // filter none-custom module
-              .map((x) => ({
-                title: `module.${x.meta.i18n}`,
-                to: { path: x.path.replace(':chain', this.chainName) },
-                icon: { icon: 'mdi-chevron-right', size: '22' },
-                i18n: true,
-                order: Number((this.current?.features ? this.current.features.indexOf(String(x.meta.i18n)) : -1) !== -1
-                  ? this.current?.features?.indexOf(String(x.meta.i18n))
-                  : 100),
-              }))
-              .sort((a, b) => a.order - b.order),
+            children: [
+              ...(account ? [account] : []),
+              ...primaryWithoutDashboard,
+              ...(advanced.length
+                ? [{ title: 'module.advanced', icon: { icon: 'mdi-tune-variant', size: '22' }, children: advanced } as NavGroup]
+                : []),
+            ],
           },
         ];
       }
-      // compute favorite menu
-      const favNavItems: VerticalNavItems = [];
-      Object.keys(this.dashboard.favoriteMap).forEach((name) => {
-        const ch = this.dashboard.chains[name];
-        if (ch && this.dashboard.favoriteMap?.[name]) {
-          favNavItems.push({
-            title: ch.prettyName || ch.chainName || name,
-            to: { path: `/${ch.chainName || name}` },
-            icon: { image: ch.logo, size: '22' },
-          });
-        }
-      });
-
-      // combine all together
-      return [
-        ...currNavItem,
-        /*
-        { heading: 'Ecosystem' } as NavSectionTitle,
-        {
-          title: 'Favorite',
-          children: favNavItems,
-          badgeContent: favNavItems.length,
-          badgeClass: 'bg-primary',
-          i18n: true,
-          icon: { icon: 'mdi-star', size: '22' },
-        } as NavGroup,
-         */
-        {
-          title: 'Verona Networks',
-          to: { path: '/' },
-          badgeContent: this.dashboard.length,
-          badgeClass: 'bg-primary',
-          i18n: true,
-          icon: { icon: 'mdi-grid', size: '22' },
-        } as NavLink,
-      ];
+      return currNavItem;
     },
   },
   actions: {

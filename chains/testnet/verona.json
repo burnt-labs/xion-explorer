@@ -1,6 +1,7 @@
 {
-  "chain_name": "veronatestnet2",
+  "chain_name": "verona",
   "chain_id": "xion-testnet-2",
+  "registry_chain_name": "xion",
   "registry_name": "Verona Testnet",
   "coingecko": "xion",
   "network_type": "testnet",
@@ -44,6 +45,12 @@
       "base": "uxion",
       "symbol": "VERONA",
       "exponent": "6",
+      "denom_aliases": { "uxion": "uverona", "mxion": "mverona", "verona": "VERONA" },
+      "denom_units": [
+        { "denom": "uxion", "exponent": 0 },
+        { "denom": "mxion", "exponent": 3 },
+        { "denom": "verona", "exponent": 6 }
+      ],
       "coingecko_id": "xion-2",
       "logo": "/verona.png"
     },
@@ -51,12 +58,28 @@
       "base": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc",
       "symbol": "SBC",
       "exponent": "6",
+      "denom_aliases": {
+        "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc": "usbc",
+        "sbc": "SBC"
+      },
+      "denom_units": [
+        { "denom": "factory/xion17grq736740r70awldugfs3mls3stu9haewctv2/sbc", "exponent": 0 },
+        { "denom": "sbc", "exponent": 6 }
+      ],
       "logo": "https://brale.network/logos/valuetype/sbc.svg"
     },
     {
       "base": "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B",
       "symbol": "OSMO",
       "exponent": "6",
+      "denom_aliases": {
+        "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B": "uosmo",
+        "osmo": "OSMO"
+      },
+      "denom_units": [
+        { "denom": "ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B", "exponent": 0 },
+        { "denom": "osmo", "exponent": 6 }
+      ],
       "coingecko_id": "osmosis",
       "logo": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/osmo.png"
     },
@@ -76,18 +99,16 @@
     }
   ],
   "features": [
+    "account",
     "dashboard",
     "staking",
     "governance",
-    "tx",
     "blocks",
-    "ibc",
+    "tx",
     "supply",
-    "uptime",
-    "consensus",
+    "ibc",
     "cosmwasm",
-    "parameters",
-    "account"
+    "parameters"
   ],
   "keplr_features": [
     "ibc-go",

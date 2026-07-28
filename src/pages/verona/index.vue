@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useDashboard, LoadingStatus } from '@/stores';
 import type { ChainConfig } from '@/types/chaindata';
-import ChainSummary from '@/components/xion/ChainSummary.vue';
+import ChainSummary from '@/components/verona/ChainSummary.vue';
 
 import { computed } from 'vue';
 
