@@ -79,9 +79,8 @@ export class WasmRestClient extends BaseRestClient<WasmRequestRegistry> {
     return this.request(this.registry.cosmwasm_code, { code_id }); // `code_id` is a param in above url
   }
   getWasmCodeContracts(code_id: string, page?: PageRequest) {
-    // if(!page) page = new PageRequest()
-    // const query = `?${page.toQueryString()}`
-    return this.request(this.registry.cosmwasm_code_id_contracts, { code_id });
+    const query = page ? `?${page.toQueryString()}` : undefined;
+    return this.request(this.registry.cosmwasm_code_id_contracts, { code_id }, query);
   }
   getWasmParams() {
     return this.request(this.registry.cosmwasm_param, {});
@@ -90,9 +89,8 @@ export class WasmRestClient extends BaseRestClient<WasmRequestRegistry> {
     return this.request(this.registry.cosmwasm_contract_address, { address });
   }
   getWasmContractsByCreator(creator_address: string, page?: PageRequest) {
-    // if(!page) page = new PageRequest()
-    // const query = `?${page.toQueryString()}`
-    return this.request(this.registry.cosmwasm_wasm_contracts_creator, { creator_address });
+    const query = page ? `?${page.toQueryString()}` : undefined;
+    return this.request(this.registry.cosmwasm_wasm_contracts_creator, { creator_address }, query);
   }
   getWasmContractHistory(address: string) {
     return this.request(this.registry.cosmwasm_contract_address_history, {
