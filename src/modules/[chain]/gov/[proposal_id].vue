@@ -371,7 +371,7 @@ function metaItem(metadata: string | undefined): { title: string; summary: strin
     <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
       <h2 class="card-title">{{ $t('gov.votes') }}</h2>
       <div class="overflow-x-auto">
-        <table class="table w-full table-zebra">
+        <table class="table w-full">
           <tbody>
             <tr v-for="(item, index) of votes" :key="index">
               <td class="py-2 text-sm">{{ showValidatorName(item.voter) }}</td>

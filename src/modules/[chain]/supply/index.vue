@@ -82,7 +82,7 @@ function pageload(p: number) {
 <template>
   <div class="overflow-auto bg-base-100">
     <table class="table table-compact">
-      <thead class="bg-base-200">
+      <thead>
         <tr>
           <td>Logo</td>
           <td>Token</td>

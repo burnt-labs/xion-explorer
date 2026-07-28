@@ -290,7 +290,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
         </div>
       </div>
       <div class="overflow-x-auto">
-        <table class="table w-full text-sm table-zebra">
+        <table class="table w-full text-sm">
           <thead>
             <tr>
               <th class="py-3">{{ $t('account.validator') }}</th>
@@ -305,7 +305,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
                 <div class="text-center">{{ $t('account.no_delegations') }}</div>
               </td>
             </tr>
-            <tr v-for="(v, index) in delegations" :key="index">
+            <tr v-for="(v, index) in delegations" :key="index" class="hover">
               <td class="text-caption text-primary py-3">
                 <RouterLink :to="`/${chain}/staking/${v.delegation.validator_address}`">{{
                   format.validatorFromBech32(v.delegation.validator_address) || v.delegation.validator_address
@@ -446,7 +446,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
                 <div class="text-center">{{ $t('account.no_transactions') }}</div>
               </td>
             </tr>
-            <tr v-for="(v, index) in txs" :key="index">
+            <tr v-for="(v, index) in txs" :key="index" class="hover">
               <td class="text-sm py-3">
                 <RouterLink
                   :to="`/${chain}/block/${v.height}`"
@@ -498,7 +498,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
                 <div class="text-center">{{ $t('account.no_transactions') }}</div>
               </td>
             </tr>
-            <tr v-for="(v, index) in recentReceived" :key="index">
+            <tr v-for="(v, index) in recentReceived" :key="index" class="hover">
               <td class="text-sm py-3">
                 <RouterLink
                   :to="`/${chain}/block/${v.height}`"

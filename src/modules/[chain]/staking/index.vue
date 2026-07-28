@@ -290,7 +290,7 @@ loadAvatars();
       <div class="bg-base-100 px-4 pt-3 pb-4 rounded shadow">
         <div class="overflow-x-auto">
           <table class="table staking-table w-full">
-            <thead class="bg-base-200">
+            <thead>
               <tr>
                 <th scope="col" class="uppercase" style="width: 3rem; position: relative">
                   {{ $t('staking.rank') }}
@@ -306,7 +306,7 @@ loadAvatars();
               <tr
                 v-for="({ v, rank, logo }, i) in list"
                 :key="v.operator_address"
-                class="hover:bg-gray-100 dark:hover:bg-[#384059]"
+                class="hover"
               >
                 <!-- 👉 rank -->
                 <td>
@@ -434,6 +434,5 @@ loadAvatars();
 <style>
 .staking-table.table :where(th, td) {
   padding: 8px 5px;
-  background: transparent;
 }
 </style>

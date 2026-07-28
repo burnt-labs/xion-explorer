@@ -62,7 +62,7 @@ function gotoHistory() {
 
     <div class="overflow-x-auto">
       <table class="table table-compact w-full mt-4 text-sm">
-        <thead class="bg-base-200">
+        <thead>
           <tr>
             <th>{{ $t('cosmwasm.code_id') }}</th>
             <th>{{ $t('cosmwasm.code_hash') }}</th>
