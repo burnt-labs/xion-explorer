@@ -292,7 +292,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
               :key="index"
               class="hover:bg-active"
             >
-              <td class="text-caption text-primary py-3">
+              <td class="text-primary py-3">
                 <RouterLink :to="`/${chain}/staking/${v.delegation.validator_address}`" @click.stop>{{
                   format.validatorFromBech32(v.delegation.validator_address) || v.delegation.validator_address
                 }}</RouterLink>
@@ -342,7 +342,7 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
           </thead>
           <tbody class="text-sm" v-for="(v, index) in unbonding" :key="index">
             <tr>
-              <td class="text-caption text-primary py-3 bg-slate-200" colspan="10">
+              <td class="text-primary py-3 bg-slate-200" colspan="10">
                 <RouterLink :to="`/${chain}/staking/${v.validator_address}`">{{ v.validator_address }}</RouterLink>
               </td>
             </tr>

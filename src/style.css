@@ -36,7 +36,6 @@ body {
   --bg-active: #f7f3ec; /* bento hover */
 }
 
-html.dark,
 html[data-theme='dark'] {
   --root-bg: #090f0c; /* deep Forest */
   --color-base-100: #19271f; /* Forest */
@@ -46,26 +45,19 @@ html[data-theme='dark'] {
   --panel-border: rgb(47 72 66 / 0.7);
 }
 
-html.dark .bg-base-100,
 html[data-theme='dark'] .bg-base-100 {
   background-color: #19271f;
 }
 
-html.dark th,
 html[data-theme='dark'] th,
-html.dark .bg-base-200,
 html[data-theme='dark'] .bg-base-200 {
   background-color: #101a14;
 }
 
-html.dark tr.hover:hover,
 html[data-theme='dark'] tr.hover:hover {
   background-color: #22362b;
 }
 
-html.dark .bg-base-100.rounded,
-html.dark .bg-base-100.rounded-md,
-html.dark .bg-base-100.rounded-lg,
 html[data-theme='dark'] .bg-base-100.rounded,
 html[data-theme='dark'] .bg-base-100.rounded-md,
 html[data-theme='dark'] .bg-base-100.rounded-lg {
@@ -73,23 +65,24 @@ html[data-theme='dark'] .bg-base-100.rounded-lg {
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.16);
 }
 
-html.dark .text-white,
-html.dark .\!text-white,
-html.dark .dark:text-white,
+/* DEAD RULE - DO NOT "FIX" THE COLON WITHOUT READING THIS.
+   The third selector should be `.dark\:text-white` (escaped). Unescaped,
+   `:text-white` parses as an unknown pseudo-class, which invalidates the whole
+   selector list, so the browser drops this rule entirely - verified: the
+   stylesheet reports 0 cssRules for it. It has therefore never applied.
+   Escaping the colon would silently re-point 31 `text-white`/`!text-white`
+   usages to Linen in dark mode all at once. Left inert deliberately; the
+   intended behaviour needs to be re-decided, not resurrected by accident. */
 html[data-theme='dark'] .text-white,
 html[data-theme='dark'] .\!text-white,
 html[data-theme='dark'] .dark:text-white {
   color: #f8f7f3 !important;
 }
 
-html.dark .modal-box,
 html[data-theme='dark'] .modal-box {
   background-color: #19271f;
 }
 
-html.dark input,
-html.dark textarea.textarea,
-html.dark select.select,
 html[data-theme='dark'] input,
 html[data-theme='dark'] textarea.textarea,
 html[data-theme='dark'] select.select {
@@ -119,12 +112,6 @@ html[data-theme='dark'] select.select {
 .uptime-precommitted { background-color: #bea64d; }
 .uptime-missed { background-color: #bb392a; }
 
-html.light :where(a.link, a.text-primary, .btn-link),
-html.light :where(a.link, a.text-primary, .btn-link):hover,
-html.light :where(a.link, a.text-primary, .btn-link):focus-visible,
-html.light .link-primary,
-html.light .link-primary:hover,
-html.light .link-primary:focus-visible,
 html[data-theme='light'] :where(a.link, a.text-primary, .btn-link),
 html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):hover,
 html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):focus-visible,
@@ -136,12 +123,6 @@ html[data-theme='light'] .text-info {
   color: #4cb1df;
 }
 
-html.dark :where(a.link, a.text-primary, .btn-link),
-html.dark :where(a.link, a.text-primary, .btn-link):hover,
-html.dark :where(a.link, a.text-primary, .btn-link):focus-visible,
-html.dark .link-primary,
-html.dark .link-primary:hover,
-html.dark .link-primary:focus-visible,
 html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link),
 html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):hover,
 html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):focus-visible,
@@ -154,21 +135,16 @@ html[data-theme='dark'] .text-info {
 }
 
 /* Keep link hover feedback consistent across native anchors and RouterLinks. */
-html.light a:not(.btn):not(.tab):hover,
 html[data-theme='light'] a:not(.btn):not(.tab):hover {
   color: #b56135;
   text-decoration: underline;
 }
 
-html.dark a:not(.btn):not(.tab),
-html.dark .btn-link,
 html[data-theme='dark'] a:not(.btn):not(.tab),
 html[data-theme='dark'] .btn-link {
   color: #4cb1df !important;
 }
 
-html.dark a:not(.btn):not(.tab):hover,
-html.dark .btn-link:hover,
 html[data-theme='dark'] a:not(.btn):not(.tab):hover,
 html[data-theme='dark'] .btn-link:hover {
   color: #b56135 !important;
@@ -179,7 +155,6 @@ html[data-theme='dark'] .btn-link:hover {
   text-decoration: none !important;
 }
 
-html.dark .text-primary.dark\:invert,
 html[data-theme='dark'] .text-primary.dark\:invert {
   filter: none;
 }

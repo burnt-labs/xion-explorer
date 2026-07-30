@@ -345,7 +345,6 @@ loadAvatars();
                               validator: v.operator_address,
                             },
                           }"
-                          class="font-weight-medium"
                         >
                           {{ v.description?.moniker }}
                         </RouterLink>
@@ -358,7 +357,7 @@ loadAvatars();
                 <!-- 👉 Voting Power -->
                 <td class="text-right">
                   <div class="flex flex-col">
-                    <h6 class="text-sm font-weight-medium whitespace-nowrap">
+                    <h6 class="text-sm whitespace-nowrap">
                       {{
                         format.formatToken(
                           {
