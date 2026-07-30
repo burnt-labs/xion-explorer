@@ -250,14 +250,12 @@ function changeTab(v: string) {
       </div>
 
       <!-- grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-4 mt-4 -->
-      <div :class="visibleTab === '2' ? '' : 'hidden'">
-        <div class="flex flex-row flex-wrap gap-x-4 mt-4 justify-center">
+      <div :class="visibleTab === '2' ? '' : 'hidden'" class="rounded-lg bg-seashell px-4 pt-4 pb-5 mt-4">
+        <div class="flex flex-row flex-wrap gap-x-4 justify-center">
           <div v-for="(unit, i) in grid" :key="i">
             <div class="flex justify-between py-0 w-[248px]">
               <label class="truncate text-sm">
-                <span class="ml-1 text-black dark:text-white"
-                  >{{ i + 1 }}.{{ unit.moniker }}</span
-                >
+                <span class="ml-1 text-black">{{ i + 1 }}.{{ unit.moniker }}</span>
               </label>
               <div
                 v-if="Number(unit?.missed_blocks_counter || 0) > 10"
@@ -275,7 +273,7 @@ function changeTab(v: string) {
             <UptimeBar :blocks="unit.blocks" />
           </div>
         </div>
-        <div class="mt-5 text-xs flex justify-center gap-2">
+        <div class="mt-5 text-xs flex justify-center gap-2 text-black">
           <span class="font-bold">{{ $t('uptime.legend') }}: </span>
           <span class="bg-success">&nbsp;</span> {{ $t('uptime.committed') }}
           <span class="bg-warning">&nbsp;</span>
