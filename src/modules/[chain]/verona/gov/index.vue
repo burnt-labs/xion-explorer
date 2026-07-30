@@ -108,7 +108,6 @@ function openProposalFromRow(event: MouseEvent) {
   background: hsl(var(--b1));
 }
 
-html.dark .governance-header,
 html[data-theme='dark'] .governance-header {
   background: #101a14;
 }
