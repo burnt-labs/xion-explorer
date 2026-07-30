@@ -390,8 +390,6 @@ dayjs();
   background-color: #f1ece3;
 }
 
-html.dark .verona-page :deep(table thead th),
-html.dark .verona-page :deep(table thead td),
 html[data-theme='dark'] .verona-page :deep(table thead th),
 html[data-theme='dark'] .verona-page :deep(table thead td) {
   background-color: #101a14;

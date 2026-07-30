@@ -186,7 +186,6 @@ function pageload(page: number) {
   text-align: left;
 }
 
-html.dark .supply-tooltip,
 html[data-theme='dark'] .supply-tooltip {
   --tooltip-color: #101a14;
   --tooltip-text-color: hsl(var(--bc));
