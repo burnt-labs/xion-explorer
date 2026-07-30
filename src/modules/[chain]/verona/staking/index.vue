@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { useBaseStore, useBlockchain, useFormatter, useStakingStore, useTxDialog } from '@/stores';
+import { useBaseStore, useBlockchain, useFormatter, useMintStore, useStakingStore, useTxDialog } from '@/stores';
 import { computed } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
 import { Icon } from '@iconify/vue';
 import type { Key, SigningInfo, SlashingParam, Validator } from '@/types';
 import { consensusPubkeyToHexAddress, valconsToBase64 } from '@/libs';
+import { formatSeconds } from '@/libs/utils';
 import { diff } from 'semver';
 import { fromHex, toBase64 } from '@cosmjs/encoding';
 import { useRouter } from 'vue-router';
@@ -16,6 +17,7 @@ const base = useBaseStore();
 const format = useFormatter();
 const dialog = useTxDialog();
 const chainStore = useBlockchain();
+const mintStore = useMintStore();
 const router = useRouter();
 
 const openValidator = (operatorAddress: string) =>
@@ -258,6 +260,57 @@ loadAvatars();
 </script>
 <template>
   <div>
+    <div class="bg-base-100 rounded-lg grid sm:grid-cols-1 md:grid-cols-4 p-4 mb-4">
+      <div class="flex">
+        <span>
+          <div class="relative w-9 h-9 rounded overflow-hidden flex items-center justify-center mr-2">
+            <Icon class="text-success" icon="mdi:trending-up" size="32" />
+            <div class="absolute top-0 left-0 bottom-0 right-0 opacity-20 bg-success"></div>
+          </div>
+        </span>
+        <span>
+          <div class="font-bold">{{ format.percent(mintStore.inflation) }}</div>
+          <div class="text-xs">{{ $t('staking.inflation') }}</div>
+        </span>
+      </div>
+      <div class="flex">
+        <span>
+          <div class="relative w-9 h-9 rounded overflow-hidden flex items-center justify-center mr-2">
+            <Icon class="text-primary" icon="mdi:lock-open-outline" size="32" />
+            <div class="absolute top-0 left-0 bottom-0 right-0 opacity-20 bg-primary"></div>
+          </div>
+        </span>
+        <span>
+          <div class="font-bold">{{ formatSeconds(staking.params?.unbonding_time) }}</div>
+          <div class="text-xs">{{ $t('staking.unbonding_time') }}</div>
+        </span>
+      </div>
+      <div class="flex">
+        <span>
+          <div class="relative w-9 h-9 rounded overflow-hidden flex items-center justify-center mr-2">
+            <Icon class="text-error" icon="mdi:alert-octagon-outline" size="32" />
+            <div class="absolute top-0 left-0 bottom-0 right-0 opacity-20 bg-error"></div>
+          </div>
+        </span>
+        <span>
+          <div class="font-bold">{{ format.percent(slashing.slash_fraction_double_sign) }}</div>
+          <div class="text-xs">{{ $t('staking.double_sign_slashing') }}</div>
+        </span>
+      </div>
+      <div class="flex">
+        <span>
+          <div class="relative w-9 h-9 rounded overflow-hidden flex items-center justify-center mr-2">
+            <Icon class="text-error" icon="mdi:pause" size="32" />
+            <div class="absolute top-0 left-0 bottom-0 right-0 opacity-20 bg-error"></div>
+          </div>
+        </span>
+        <span>
+          <div class="font-bold">{{ format.percent(slashing.slash_fraction_downtime) }}</div>
+          <div class="text-xs">{{ $t('staking.downtime_slashing') }}</div>
+        </span>
+      </div>
+    </div>
+
     <div>
       <div class="flex items-center justify-between py-1">
         <div class="tabs tabs-boxed bg-transparent">
@@ -339,10 +392,12 @@ loadAvatars();
                     </div>
 
                     <div class="flex flex-col">
-                      <span class="text-sm text-primary dark:invert whitespace-nowrap overflow-hidden font-weight-medium">
+                      <span class="text-sm whitespace-nowrap overflow-hidden">
                         {{ v.description?.moniker }}
                       </span>
-                      <span class="text-xs">{{ v.description?.website || v.description?.identity || '-' }}</span>
+                      <span class="text-xs text-secondary">{{
+                        v.description?.website || v.description?.identity || '-'
+                      }}</span>
                     </div>
                   </div>
                 </td>
@@ -350,7 +405,7 @@ loadAvatars();
                 <!-- 👉 Voting Power -->
                 <td class="text-right">
                   <div class="flex flex-col">
-                    <h6 class="text-sm font-weight-medium whitespace-nowrap">
+                    <h6 class="text-sm whitespace-nowrap">
                       {{
                         format.formatToken(
                           {
@@ -444,7 +499,7 @@ loadAvatars();
                       <div class="h-8 w-8 rounded-full bg-base-content opacity-10"></div>
                       <img v-if="logo" :src="logo" class="absolute inset-0 h-8 w-8 rounded-full object-contain" />
                     </div>
-                    <span class="text-sm text-primary">{{ validator.description.moniker }}</span>
+                    <span class="text-sm">{{ validator.description.moniker }}</span>
                   </div>
                 </td>
                 <td class="text-right">{{ signing?.start_height || '-' }}</td>
