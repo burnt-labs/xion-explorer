@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "topology": "chain",
+  // Preserve the existing merge-to-live behavior for both networks.
+  "promotionMode": "automatic",
+  "packageManager": "yarn",
+  "workingDirectory": ".",
+  "versionFile": "package.json",
+  // Automatic promotion deploys mainnet in the same run, so a separate
+  // publicly reachable mainnet preview would only duplicate the build.
+  "previewReleaseOnMain": false,
+  "targets": {
+    "candidate": {
+      "wranglerEnv": "testnet",
+      "githubEnvironment": "testnet",
+      "url": "https://explorer.testnet.burnt.com",
+    },
+    "release": {
+      "wranglerEnv": "mainnet",
+      "githubEnvironment": "mainnet",
+      "url": "https://explorer.burnt.com",
+    },
+  },
+}
