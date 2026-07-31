@@ -9,30 +9,34 @@
   "compatibility_flags": ["nodejs_compat"],
   "preview_urls": true,
   "workers_dev": true,
-  "assets": {
-    "not_found_handling": "single-page-application",
-    "directory": "./dist"
-  },
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "env": {
     "mainnet": {
       "name": "xion-explorer-mainnet",
+      "assets": {
+        "not_found_handling": "single-page-application",
+        "directory": "./dist/mainnet",
+      },
       "routes": [
         { "pattern": "explorer.burnt.com", "custom_domain": true },
         { "pattern": "explorer.xion.burnt.com", "custom_domain": true },
-        { "pattern": "explorer.mainnet.burnt.com", "custom_domain": true }
-      ]
+        { "pattern": "explorer.mainnet.burnt.com", "custom_domain": true },
+      ],
     },
     "testnet": {
       "name": "xion-explorer-testnet",
+      "assets": {
+        "not_found_handling": "single-page-application",
+        "directory": "./dist/testnet",
+      },
       "routes": [
-        { "pattern": "explorer.testnet.burnt.com", "custom_domain": true }
-      ]
-    }
-  }
+        { "pattern": "explorer.testnet.burnt.com", "custom_domain": true },
+      ],
+    },
+  },
   /**
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
