@@ -45,10 +45,10 @@ export function deploymentConfigurationErrors({
   if (
     workflows.some(
       (workflow) =>
-        !workflow.includes('@185554bd035d31757e526b90416eef9ed5ed56e1 # v1.2.0')
+        !workflow.includes('@511b72fad7c0bd937e2820b8e4165b075a875cf9 # v1.2.8')
     )
   ) {
-    errors.push('shared workflows must be pinned to v1.2.0');
+    errors.push('shared workflows must be pinned to v1.2.8');
   }
 
   return errors;
