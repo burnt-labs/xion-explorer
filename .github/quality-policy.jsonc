@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "workingDirectory": ".",
+  "commands": {
+    "install": "yarn install --frozen-lockfile",
+    "lint": "yarn run lint",
+    "prettier": "yarn run format:check",
+    "typeCheck": "yarn run type-check",
+    "test": "yarn run test",
+    "coverage": "yarn run test:coverage",
+    "build": "yarn run build:deploy",
+  },
+  "coverageThresholds": {
+    "lines": 100,
+    "functions": 100,
+    "branches": 100,
+  },
+}
