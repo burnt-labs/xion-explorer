@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useBaseStore, useBlockchain, useFormatter, useMintStore, useStakingStore, useTxDialog } from '@/stores';
+import { useBaseStore, useBlockchain, useFormatter, useMintStore, useStakingStore } from '@/stores';
 import { computed } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
 import { Icon } from '@iconify/vue';
@@ -11,14 +11,15 @@ import { fromHex, toBase64 } from '@cosmjs/encoding';
 import { useRouter } from 'vue-router';
 import UptimeView from './UptimeView.vue';
 import ConsensusView from '../../consensus/index.vue';
+import StakingActionDialog from '@/components/verona/StakingActionDialog.vue';
 
 const staking = useStakingStore();
 const base = useBaseStore();
 const format = useFormatter();
-const dialog = useTxDialog();
 const chainStore = useBlockchain();
 const mintStore = useMintStore();
 const router = useRouter();
+const stakingActionDialog = ref<InstanceType<typeof StakingActionDialog>>();
 
 const openValidator = (operatorAddress: string) =>
   router.push({
@@ -434,16 +435,12 @@ loadAvatars();
                     <div v-if="v.jailed" class="badge bg-brick border-brick gap-2 text-linen">
                       {{ $t('staking.jailed') }}
                     </div>
-                    <label
+                    <button
                       v-if="!v.jailed"
-                      for="delegate"
+                      type="button"
                       class="btn !btn-xs !btn-primary btn-ghost rounded-sm capitalize"
-                      @click.stop="
-                        dialog.open('delegate', {
-                          validator_address: v.operator_address,
-                        })
-                      "
-                      >{{ $t('account.btn_delegate') }}</label
+                      @click.stop="stakingActionDialog?.open(v.operator_address, 'delegate')"
+                      >{{ $t('account.btn_delegate') }}</button
                     >
                   </div>
                 </td>
@@ -451,6 +448,8 @@ loadAvatars();
             </tbody>
           </table>
         </div>
+
+        <StakingActionDialog ref="stakingActionDialog" />
 
         <div class="mt-4 flex flex-row items-center">
           <div class="text-xs truncate relative py-2 px-4 rounded-md w-fit text-error mr-2">

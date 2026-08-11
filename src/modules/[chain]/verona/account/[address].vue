@@ -132,7 +132,7 @@ async function copyPublicKey(value: string) {
   window.setTimeout(() => (publicKeyCopied.value = false), 1200);
 }
 
-function chooseStakingAction(validatorAddress: string) {
+function chooseStakingAction(validatorAddress = '') {
   stakingActionDialog.value?.open(validatorAddress);
 }
 
@@ -199,13 +199,13 @@ function mapAmount(events: { type: string; attributes: { key: string; value: str
           <label for="send" class="btn btn-primary btn-sm mr-2" @click="dialog.open('send', {}, updateEvent)">{{
             $t('account.btn_send')
           }}</label>
-          <label
-            for="delegate"
+          <button
+            type="button"
             class="btn btn-primary btn-sm mr-2"
-            @click="dialog.open('delegate', {}, updateEvent)"
+            @click="chooseStakingAction()"
           >
             {{ $t('account.btn_delegate') }}
-          </label>
+          </button>
         </div>
       </div>
       <div class="mt-4">

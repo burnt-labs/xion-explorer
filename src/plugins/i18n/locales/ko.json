@@ -50,6 +50,7 @@
     "total_value": "총 가치",
     "delegations": "위임",
     "no_delegations": "위임 없음",
+    "manage_staking": "스테이킹 관리",
     "btn_delegate": "위임하기",
     "btn_redelegate": "재위임하기",
     "btn_withdraw": "출금하기",

@@ -7,6 +7,7 @@ import { useBlockchain } from '@/stores';
 import { useWalletStore } from '@/stores/verona/useWalletStore';
 import { getAbstraxionSigningClient } from '@/services/abstraxion';
 import type { Validator } from '@/types';
+import { useI18n } from 'vue-i18n';
 
 type KeplrProvider = {
   enable(chainId: string): Promise<void>;
@@ -30,6 +31,7 @@ const emit = defineEmits<{
 }>();
 const chain = useBlockchain();
 const wallet = useWalletStore();
+const { t } = useI18n();
 const recipient = ref('');
 const amount = ref<string | number>('');
 const denom = ref('');
@@ -61,7 +63,15 @@ const assets = computed(() => chain.current?.assets || []);
 const selectedAsset = computed(() => assets.value.find((asset) => asset.base === denom.value) || assets.value[0]);
 const amountUnits = computed(() => [...(selectedAsset.value?.denom_units || [])].sort((a, b) => Number(b.exponent) - Number(a.exponent)));
 const selectedUnit = computed(() => amountUnits.value.find((unit) => unit.denom === amountDenom.value) || amountUnits.value[0]);
-const title = computed(() => props.type.replace(/^wasm_/, '').replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
+const title = computed(() => {
+  const stakingTitleKeys: Record<string, string> = {
+    delegate: 'account.btn_delegate',
+    redelegate: 'account.btn_redelegate',
+    unbond: 'account.btn_unbond',
+  };
+  const stakingTitleKey = stakingTitleKeys[props.type];
+  return stakingTitleKey ? t(stakingTitleKey) : props.type.replace(/^wasm_/, '').replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+});
 const isBulkWithdraw = computed(() => props.type === 'withdraw' && !params.value.validator_address);
 const isAmountAction = computed(() => ['send', 'delegate', 'redelegate', 'unbond', 'deposit'].includes(props.type));
 const isWasmExecute = computed(() => props.type === 'wasm_execute_contract');

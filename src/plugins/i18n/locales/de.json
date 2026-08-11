@@ -50,6 +50,7 @@
     "total_value": "Gesamtwert",
     "delegations": "Delegationen",
     "no_delegations": "Keine Delegationen",
+    "manage_staking": "Staking verwalten",
     "btn_delegate": "Delegieren",
     "btn_redelegate": "Redelegieren",
     "btn_withdraw": "Abheben",
