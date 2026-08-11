@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { useFormatter, useTxDialog } from '@/stores';
 
 type StakingAction = 'delegate' | 'redelegate' | 'unbond';
@@ -10,12 +10,10 @@ const format = useFormatter();
 const visible = ref(false);
 const validatorAddress = ref('');
 const action = ref<StakingAction>('delegate');
-const actions: StakingAction[] = ['delegate', 'redelegate', 'unbond'];
-const availableActions = computed(() => (validatorAddress.value ? actions : actions.slice(0, 1)));
 
 function open(address = '', defaultAction: StakingAction = 'delegate') {
   validatorAddress.value = address;
-  action.value = address ? defaultAction : 'delegate';
+  action.value = defaultAction;
   visible.value = true;
 }
 
@@ -40,7 +38,7 @@ defineExpose({ open });
         {{ format.validatorFromBech32(validatorAddress) || validatorAddress }}
       </p>
       <div class="mt-5 grid gap-2">
-        <label v-for="choice in availableActions" :key="choice" class="flex cursor-pointer items-center gap-3 rounded-lg border border-base-300 p-3 hover:bg-active">
+        <label v-for="choice in (['delegate', 'redelegate', 'unbond'] as const)" :key="choice" class="flex cursor-pointer items-center gap-3 rounded-lg border border-base-300 p-3 hover:bg-active">
           <input v-model="action" type="radio" class="radio radio-sm" name="staking-action" :value="choice" />
           <span>{{ choice === 'delegate' ? $t('account.btn_delegate') : choice === 'redelegate' ? $t('account.btn_redelegate') : $t('account.btn_unbond') }}</span>
         </label>
