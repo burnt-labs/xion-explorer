@@ -47,6 +47,7 @@
     "total_value": "总市值",
     "delegations": "质押列表",
     "no_delegations": "没有质押",
+    "manage_staking": "管理质押",
     "btn_delegate": "质押",
     "btn_redelegate": "再质押",
     "btn_withdraw": "提取",
