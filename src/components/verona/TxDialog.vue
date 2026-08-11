@@ -14,6 +14,12 @@ type KeplrProvider = {
   getOfflineSignerAuto(chainId: string): Promise<unknown>;
 };
 
+type DelegatedValidator = {
+  address: string;
+  balance: { amount: string; denom: string };
+  validator: Validator;
+};
+
 const props = defineProps<{
   type: string;
   sender: string;
@@ -40,6 +46,7 @@ const validator = ref('');
 const destinationValidator = ref('');
 const activeValidatorsOnly = ref(true);
 const validators = ref<Validator[]>([]);
+const delegatedValidators = ref<DelegatedValidator[]>([]);
 const sourceValidatorInfo = ref<Validator | null>(null);
 const voteOption = ref(1);
 const contract = ref('');
@@ -59,6 +66,7 @@ const result = ref('');
 const params = computed<Record<string, any>>(() => {
   try { return JSON.parse(props.params || '{}'); } catch { return {}; }
 });
+const hasPresetSourceValidator = computed(() => Boolean(params.value.validator_address));
 const assets = computed(() => chain.current?.assets || []);
 const selectedAsset = computed(() => assets.value.find((asset) => asset.base === denom.value) || assets.value[0]);
 const amountUnits = computed(() => [...(selectedAsset.value?.denom_units || [])].sort((a, b) => Number(b.exponent) - Number(a.exponent)));
@@ -118,6 +126,13 @@ function validatorLabel(entry: Validator) {
   return `${entry.description?.moniker || entry.operator_address} (${commission.toLocaleString('en-US', { maximumFractionDigits: 2 })}%)${inactive}`;
 }
 
+function selectSourceValidator(address: string) {
+  const source = delegatedValidators.value.find((entry) => entry.address === address);
+  sourceValidatorInfo.value = source?.validator || null;
+  delegatedBalance.value = source?.balance || null;
+  amount.value = '';
+}
+
 async function loadValidators() {
   if (!['delegate', 'redelegate'].includes(props.type)) return;
   const statuses = activeValidatorsOnly.value
@@ -154,26 +169,32 @@ async function loadStakingContext() {
   denom.value = bondDenom;
 
   if (props.type !== 'redelegate' && props.type !== 'unbond') return;
-  const sourceValidator = params.value.validator_address;
-  if (!sourceValidator) throw new Error('Source validator is required');
-  const validatorResponse = await fetch(`${props.endpoint}/cosmos/staking/v1beta1/validators/${sourceValidator}`);
-  if (!validatorResponse.ok) throw new Error(`Unable to load source validator (${validatorResponse.status})`);
-  const validatorBody = await validatorResponse.json() as { validator?: Validator };
-  if (!validatorBody.validator) throw new Error('Source validator is unavailable');
-  sourceValidatorInfo.value = validatorBody.validator;
   const delegationResponse = await fetch(`${props.endpoint}/cosmos/staking/v1beta1/delegations/${props.sender}`);
   if (!delegationResponse.ok) throw new Error(`Unable to load bonded amount (${delegationResponse.status})`);
-  const delegation = await delegationResponse.json() as {
+  const delegationBody = await delegationResponse.json() as {
     delegation_responses?: Array<{
       delegation?: { validator_address?: string };
       balance?: { amount: string; denom: string };
     }>;
   };
-  const balance = delegation.delegation_responses?.find(
-    (entry) => entry.delegation?.validator_address === sourceValidator
-  )?.balance;
-  if (!balance || balance.denom !== bondDenom) throw new Error('Bonded staking balance is unavailable');
-  delegatedBalance.value = balance;
+  const sources = await Promise.all((delegationBody.delegation_responses || []).map(async (entry) => {
+    const address = entry.delegation?.validator_address;
+    const balance = entry.balance;
+    if (!address || !balance || balance.denom !== bondDenom || Number(balance.amount) <= 0) return null;
+    const validatorResponse = await fetch(`${props.endpoint}/cosmos/staking/v1beta1/validators/${address}`);
+    if (!validatorResponse.ok) throw new Error(`Unable to load source validator (${validatorResponse.status})`);
+    const validatorBody = await validatorResponse.json() as { validator?: Validator };
+    if (!validatorBody.validator) throw new Error('Source validator is unavailable');
+    return { address, balance, validator: validatorBody.validator };
+  }));
+  delegatedValidators.value = sources.filter((entry): entry is DelegatedValidator => Boolean(entry));
+
+  const sourceValidator = params.value.validator_address;
+  if (sourceValidator) {
+    validator.value = sourceValidator;
+    selectSourceValidator(sourceValidator);
+    if (!delegatedBalance.value) throw new Error('Bonded staking balance is unavailable');
+  }
 }
 
 function assetExponent(asset = selectedAsset.value) {
@@ -226,6 +247,7 @@ watch(() => [props.visible, props.params] as const, ([visible]) => {
   error.value = '';
   result.value = '';
   delegatedBalance.value = null;
+  delegatedValidators.value = [];
   sourceValidatorInfo.value = null;
   void Promise.all([loadBalances(), loadStakingContext(), loadValidators()]).catch((cause) => {
     error.value = cause instanceof Error ? cause.message : String(cause);
@@ -306,7 +328,7 @@ async function submit() {
         <div v-if="type === 'send'" class="form-control"><label class="label"><span class="label-text">Recipient</span></label><input v-model.trim="recipient" class="input border border-gray-300 dark:border-gray-600" :class="{ '!border-error': recipientError }" aria-describedby="send-recipient-error" /><p v-if="recipientError" id="send-recipient-error" class="mt-1 text-sm text-error">{{ recipientError }}</p></div>
         <div v-if="type === 'delegate'" class="form-control"><label class="label"><span class="label-text">Validator</span><span class="flex items-center gap-2"><input v-model="activeValidatorsOnly" type="checkbox" class="checkbox checkbox-sm checkbox-primary" /><span class="label-text">Active Only</span></span></label><select v-model="validator" class="select select-bordered"><option value="">Select a validator</option><option v-for="entry in validatorOptions" :key="entry.operator_address" :value="entry.operator_address">{{ validatorLabel(entry) }}</option></select></div>
         <div v-if="(type === 'withdraw' && !isBulkWithdraw) || type === 'withdraw_commission'" class="form-control"><label class="label"><span class="label-text">Validator</span></label><input v-model.trim="validator" class="input border border-gray-300 dark:border-gray-600" /></div>
-        <div v-if="type === 'redelegate'" class="form-control"><label class="label"><span class="label-text">Source Validator</span></label><input :value="sourceValidatorInfo ? validatorLabel(sourceValidatorInfo) : validator" class="input border border-gray-300" readonly /></div>
+        <div v-if="type === 'redelegate' || type === 'unbond'" class="form-control"><label class="label"><span class="label-text">Source Validator</span></label><input v-if="hasPresetSourceValidator" :value="sourceValidatorInfo ? validatorLabel(sourceValidatorInfo) : validator" class="input border border-gray-300" readonly /><select v-else v-model="validator" class="select select-bordered" @change="selectSourceValidator(validator)"><option value="">Select a delegated validator</option><option v-for="entry in delegatedValidators" :key="entry.address" :value="entry.address">{{ validatorLabel(entry.validator) }}</option></select></div>
         <div v-if="type === 'redelegate'" class="form-control"><label class="label"><span class="label-text">Destination Validator</span><span class="flex items-center gap-2"><input v-model="activeValidatorsOnly" type="checkbox" class="checkbox checkbox-sm checkbox-primary" /><span class="label-text">Active Only</span></span></label><select v-model="destinationValidator" class="select select-bordered"><option value="">Select a validator</option><option v-for="entry in validatorOptions" :key="entry.operator_address" :value="entry.operator_address" :disabled="entry.operator_address === validator">{{ validatorLabel(entry) }}</option></select></div>
         <div v-if="isAmountAction" class="form-control"><label class="label"><span class="label-text">Amount</span><button type="button" class="btn btn-primary btn-xs h-auto min-h-0 px-2 py-1 normal-case" @click="fillAvailable">{{ displayAmount(available) }} {{ unitName(amountDenom) }}</button></label><label class="input-group"><input v-model="amount" type="number" :placeholder="`Available: ${displayAmount(available)}`" class="input border border-gray-300 dark:border-gray-600 w-full" /><select v-model="amountDenom" class="select select-bordered"><option v-for="unit in amountUnits" :key="unit.denom" :value="unit.denom">{{ unitName(unit.denom) }}</option></select></label></div>
         <div v-if="type === 'vote'" class="form-control"><label class="label"><span class="label-text">Vote</span></label><select v-model="voteOption" class="select border border-gray-300 dark:border-gray-600"><option :value="1">Yes</option><option :value="2">Abstain</option><option :value="3">No</option><option :value="4">No with veto</option></select></div>
