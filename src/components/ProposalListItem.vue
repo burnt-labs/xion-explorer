@@ -35,7 +35,9 @@ const voterStatusMap: Record<string, string> = {
 const proposalInfo = ref();
 
 function metaItem(metadata: string | undefined): { title: string; summary: string } {
-  return metadata ? JSON.parse(metadata) : {};
+  // Callers use this in `a || b || metaItem(...)?.title` fallback chains, so the
+  // empty case has to keep the declared shape rather than return a bare {}.
+  return metadata ? JSON.parse(metadata) : { title: '', summary: '' };
 }
 </script>
 <template>
