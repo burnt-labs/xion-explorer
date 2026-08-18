@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  cloudflare:
+    uses: burnt-labs/github-workflows/.github/workflows/cloudflare-release.yml@511b72fad7c0bd937e2820b8e4165b075a875cf9 # v1.2.8
+    with:
+      release-tag: ${{ github.event.release.tag_name }}
+      release-url: ${{ github.event.release.html_url }}
+      prerelease: ${{ github.event.release.prerelease }}
+    secrets:
+      cloudflare-account-id: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
+      cloudflare-api-token: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
