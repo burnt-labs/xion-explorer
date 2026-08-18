@@ -278,16 +278,18 @@ function mapDelegators(messages: any[]) {
               <div class="text-sm mb-4">
                 {{ v.description?.identity || '-' }}
               </div>
-              <label
-                for="delegate"
-                class="btn btn-primary btn-sm w-full"
-                @click="
-                  dialog.open('delegate', {
-                    validator_address: v.operator_address,
-                  })
-                "
-                >{{ $t('account.btn_delegate') }}</label
-              >
+              <slot name="delegate-action" :validator="v">
+                <label
+                  for="delegate"
+                  class="btn btn-primary btn-sm w-full"
+                  @click="
+                    dialog.open('delegate', {
+                      validator_address: v.operator_address,
+                    })
+                  "
+                  >{{ $t('account.btn_delegate') }}</label
+                >
+              </slot>
             </div>
           </div>
           <div class="m-4 text-sm">
@@ -463,18 +465,20 @@ function mapDelegators(messages: any[]) {
               {{ format.formatToken2(i) }}
             </div>
           </div>
-          <div class="">
-            <label
-              for="withdraw_commission"
-              class="btn btn-primary w-full"
-              @click="
-                dialog.open('withdraw_commission', {
-                  validator_address: v.operator_address,
-                })
-              "
-              >{{ $t('account.btn_withdraw') }}</label
-            >
-          </div>
+          <slot name="commission-action" :validator="v">
+            <div>
+              <label
+                for="withdraw_commission"
+                class="btn btn-primary w-full"
+                @click="
+                  dialog.open('withdraw_commission', {
+                    validator_address: v.operator_address,
+                  })
+                "
+                >{{ $t('account.btn_withdraw') }}</label
+              >
+            </div>
+          </slot>
         </div>
       </div>
       <div class="bg-base-100 rounded shadow overflow-x-auto">
@@ -625,13 +629,13 @@ function mapDelegators(messages: any[]) {
         <div class="tabs tabs-boxed bg-transparent">
           <span class="mr-10">Voting Power Events: </span>
           <a
-            class="tab text-gray-400"
+            class="tab text-base-content/60"
             :class="{ 'tab-active': selectedEventType === EventType.Delegate }"
             @click="loadPowerEvents(1, EventType.Delegate)"
             >{{ $t('account.btn_delegate') }}</a
           >
           <a
-            class="tab text-gray-400"
+            class="tab text-base-content/60"
             :class="{ 'tab-active': selectedEventType === EventType.Unbond }"
             @click="loadPowerEvents(1, EventType.Unbond)"
             >{{ $t('account.btn_unbond') }}</a

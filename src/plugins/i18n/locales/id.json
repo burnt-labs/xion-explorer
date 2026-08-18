@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "Lanjutan",
     "dashboard": "Dasbor",
     "blocks": "Kumpulan Blok",
     "staking": "Staking",
@@ -7,7 +8,7 @@
     "parameters": "Parameter",
     "uptime": "Pemantauan",
     "state-sync": "State Sync",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "Kontrak",
     "widget": "Widgets",
     "ibc": "IBC",
     "consensus": "Konsensus",
@@ -44,6 +45,7 @@
     "total_value": "Nilai Total",
     "delegations": "Delegasi",
     "no_delegations": "Tidak Ada Delegasi",
+    "manage_staking": "Kelola Staking",
     "btn_delegate": "Delegate",
     "btn_redelegate": "Redelegate",
     "btn_withdraw": "Withdraw",

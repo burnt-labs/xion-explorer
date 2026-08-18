@@ -144,16 +144,21 @@ export const useBlockchain = defineStore('blockchain', {
     },
 
     randomEndpoint(chainName: string): Endpoint | undefined {
-      const end = localStorage.getItem(`endpoint-${chainName}`);
-      if (end) {
-        return JSON.parse(end);
-      } else {
-        const all = this.current?.endpoints?.rest;
-        if (all) {
-          const rn = Math.random();
-          const endpoint = all[Math.floor(rn * all.length)];
+      const all = this.current?.endpoints?.rest;
+      const stored = localStorage.getItem(`endpoint-${chainName}`);
+      if (stored) {
+        const endpoint = JSON.parse(stored) as Endpoint;
+        // Only reuse the stored endpoint while it is still listed in the chain
+        // config. Endpoints get retired - a provider drops the chain, a host stops
+        // resolving - and a stale pin here keeps polling a dead address forever,
+        // with no way out but clearing site data.
+        if (!all || all.some((x) => x.address === endpoint.address)) {
           return endpoint;
         }
+        localStorage.removeItem(`endpoint-${chainName}`);
+      }
+      if (all && all.length) {
+        return all[Math.floor(Math.random() * all.length)];
       }
     },
 

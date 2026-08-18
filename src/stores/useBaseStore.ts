@@ -16,7 +16,7 @@ export const useBaseStore = defineStore('baseStore', {
       earliest: {} as Block,
       latest: {} as Block,
       recents: [] as Block[],
-      theme: (window.localStorage.getItem('theme') || 'dark') as 'light' | 'dark',
+      theme: (window.localStorage.getItem('theme') || 'light') as 'light' | 'dark',
       connected: false,
     };
   },
@@ -96,9 +96,11 @@ export const useBaseStore = defineStore('baseStore', {
         }
         this.latest = latest;
         this.connected = true;
+        this.blockchain.notePollResult?.(true);
       } catch (error) {
         console.error('Error fetching latest block:', error);
         this.connected = false;
+        await this.blockchain.notePollResult?.(false);
       }
       if (!this.earliest || this.earliest?.block?.header?.chain_id != this.latest?.block?.header?.chain_id) {
         //reset earliest and recents

@@ -3,10 +3,15 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { fromHex, toBase64, fromBase64, toHex } from '@cosmjs/encoding';
 import { useStakingStore, useBaseStore, useBlockchain, useFormatter } from '@/stores';
 import UptimeBar from '@/components/UptimeBar.vue';
-import type { SlashingParam, SigningInfo, Block } from '@/types';
+import type { SlashingParam, SigningInfo, Block, Validator } from '@/types';
 import { consensusPubkeyToHexAddress, valconsToBase64 } from '@/libs';
 
-const props = defineProps(['chain']);
+const props = defineProps<{
+  chain: string;
+  embedded?: boolean;
+  view?: 'blocks' | 'stats';
+  filterText?: string;
+}>();
 
 const stakingStore = useStakingStore();
 const format = useFormatter();
@@ -18,6 +23,7 @@ const live = ref(true);
 const slashingParam = ref({} as SlashingParam);
 const signingInfo = ref({} as Record<string, SigningInfo>);
 const consumerValidators = ref([] as { moniker: string; base64: string }[]);
+const embeddedValidators = ref([] as Validator[]);
 
 interface BlockColor {
   height: string;
@@ -41,6 +47,12 @@ function padding(blocks: BlockColor[] = []) {
 }
 
 const validatorSet = computed(() => {
+  if (props.embedded) {
+    return embeddedValidators.value.map((validator) => ({
+      moniker: validator.description.moniker,
+      base64: toBase64(fromHex(consensusPubkeyToHexAddress(validator.consensus_pubkey))),
+    }));
+  }
   if (chainStore.isConsumerChain) {
     return consumerValidators.value.map((v) => {
       const b64 = valconsToBase64(v.moniker);
@@ -65,10 +77,11 @@ const validatorSet = computed(() => {
 const blockColors = ref({} as Record<string, BlockColor[]>);
 
 const grid = computed(() => {
+  const filterText = props.embedded ? props.filterText || '' : keyword.value;
   const validators =
-    keyword.value.length === 0
+    filterText.length === 0
       ? validatorSet.value
-      : validatorSet.value.filter((v) => v.moniker.toLowerCase().includes(keyword.value.toLowerCase()));
+      : validatorSet.value.filter((v) => v.moniker.toLowerCase().includes(filterText.toLowerCase()));
 
   const window = Number(slashingParam.value.signed_blocks_window || 0);
   return validators.map((v) => {
@@ -121,8 +134,23 @@ baseStore.$subscribe((_, state) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
   live.value = true;
+
+  if (props.embedded) {
+    const validators = (
+      await Promise.all([
+        stakingStore.fetchAcitveValdiators(),
+        stakingStore.fetchUnbondingValdiators(),
+        stakingStore.fetchInacitveValdiators(),
+      ])
+    ).flat();
+    embeddedValidators.value = validators.filter(
+      (validator, index) =>
+        !validator.jailed &&
+        validators.findIndex((entry) => entry.operator_address === validator.operator_address) === index
+    );
+  }
 
   // fill the recent blocks
   baseStore.recents?.forEach((b) => {
@@ -162,12 +190,12 @@ function fillblock(b: Block, direction: string = 'end') {
     const block = blockColors.value[v.base64] || [];
     let color = {
       height: b.block.header.height,
-      color: 'bg-red-500',
+      color: 'bg-error',
     };
     if (sig) {
       color = {
         height: b.block.header.height,
-        color: sig.block_id_flag === 'BLOCK_ID_FLAG_COMMIT' ? 'bg-green-500' : 'bg-yellow-500',
+        color: sig.block_id_flag === 'BLOCK_ID_FLAG_COMMIT' ? 'bg-success' : 'bg-warning',
       };
     }
     if (direction === 'end') {
@@ -194,6 +222,10 @@ onUnmounted(() => {
 
 //const tab = ref(window.location.hash.search("block")>-1?"2":"3")
 const tab = ref('2');
+const visibleTab = computed(() => {
+  if (!props.embedded) return tab.value;
+  return props.view === 'stats' ? '3' : '2';
+});
 function changeTab(v: string) {
   tab.value = v;
 }
@@ -201,19 +233,19 @@ function changeTab(v: string) {
 
 <template>
   <div>
-    <div class="tabs tabs-boxed bg-transparent mb-4">
-      <a class="tab text-gray-400 capitalize" :class="{ 'tab-active': tab === '3' }" @click="changeTab('3')">{{
+    <div v-if="!embedded" class="tabs tabs-boxed bg-transparent mb-4">
+      <a class="tab text-base-content/60 capitalize" :class="{ 'tab-active': tab === '3' }" @click="changeTab('3')">{{
         $t('uptime.overall')
       }}</a>
-      <a class="tab text-gray-400 capitalize" :class="{ 'tab-active': tab === '2' }" @click="changeTab('2')">{{
+      <a class="tab text-base-content/60 capitalize" :class="{ 'tab-active': tab === '2' }" @click="changeTab('2')">{{
         $t('module.blocks')
       }}</a>
       <RouterLink :to="`/${chain}/uptime/customize`">
-        <a class="tab text-gray-400 capitalize">{{ $t('uptime.customize') }}</a>
+        <a class="tab text-base-content/60 capitalize">{{ $t('uptime.customize') }}</a>
       </RouterLink>
     </div>
     <div class="bg-base-100 px-5 pt-5">
-      <div class="flex items-center gap-x-4">
+      <div v-if="!embedded" class="flex items-center gap-x-4">
         <input
           type="text"
           v-model="keyword"
@@ -223,24 +255,22 @@ function changeTab(v: string) {
       </div>
 
       <!-- grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-4 mt-4 -->
-      <div :class="tab === '2' ? '' : 'hidden'">
-        <div class="flex flex-row flex-wrap gap-x-4 mt-4 justify-center">
+      <div :class="visibleTab === '2' ? '' : 'hidden'" class="rounded-lg bg-seashell px-4 pt-4 pb-5 mt-4">
+        <div class="flex flex-row flex-wrap gap-x-4 justify-center">
           <div v-for="(unit, i) in grid" :key="i">
             <div class="flex justify-between py-0 w-[248px]">
               <label class="truncate text-sm">
-                <span class="ml-1 text-black dark:text-white"
-                  >{{ i + 1 }}.{{ unit.moniker }}</span
-                >
+                <span class="ml-1 text-black">{{ i + 1 }}.{{ unit.moniker }}</span>
               </label>
               <div
                 v-if="Number(unit?.missed_blocks_counter || 0) > 10"
-                class="badge badge-sm bg-transparent border-0 text-red-500 font-bold"
+                class="badge badge-sm bg-transparent border-0 text-error font-bold"
               >
                 {{ unit?.missed_blocks_counter }}
               </div>
               <div
                 v-else
-                class="badge badge-sm bg-transparent text-green-600 border-0 font-bold"
+                class="badge badge-sm bg-transparent text-success border-0 font-bold"
               >
                 {{ unit?.missed_blocks_counter }}
               </div>
@@ -248,16 +278,16 @@ function changeTab(v: string) {
             <UptimeBar :blocks="unit.blocks" />
           </div>
         </div>
-        <div class="mt-5 text-xs flex justify-center gap-2">
+        <div class="mt-5 text-xs flex justify-center gap-2 text-black">
           <span class="font-bold">{{ $t('uptime.legend') }}: </span>
-          <span class="bg-green-500">&nbsp;</span> {{ $t('uptime.committed') }}
-          <span class="bg-yellow-500">&nbsp;</span>
+          <span class="bg-success">&nbsp;</span> {{ $t('uptime.committed') }}
+          <span class="bg-warning">&nbsp;</span>
           {{ $t('uptime.precommitted') }}
-          <span class="bg-red-500">&nbsp;</span> {{ $t('uptime.missed') }}
+          <span class="bg-error">&nbsp;</span> {{ $t('uptime.missed') }}
         </div>
       </div>
 
-      <div :class="tab === '3' ? '' : 'hidden'" class="overflow-x-auto">
+      <div :class="visibleTab === '3' ? '' : 'hidden'" class="overflow-x-auto">
         <table class="table table-compact w-full mt-5">
           <thead class="capitalize bg-base-200">
             <tr>
@@ -274,7 +304,7 @@ function changeTab(v: string) {
               <div class="truncate max-w-sm">{{ i + 1 }}. {{ v.moniker }}</div>
             </td>
             <td class="text-right">
-              <span :class="v.uptime && v.uptime > 0.95 ? 'text-green-500' : 'text-red-500'">
+              <span :class="v.uptime && v.uptime > 0.95 ? 'text-success' : 'text-error'">
                 <div class="tooltip" :data-tip="`${v.missed_blocks_counter} missing blocks`">
                   {{ format.percent(v.uptime) }}
                 </div>

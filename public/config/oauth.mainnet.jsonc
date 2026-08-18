@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "issuer": "https://oauth2.burnt.com",
+  "clientId": "QDjhRudt3UasZrP_",
+  "treasury": "xion1sh69nsqdx4t2zzsy7nsc0vu6wwv6pfa9lqk67nrp6432rx9zd57sql5tdx",
+  "redirectUri": "https://explorer.burnt.com/oauth/callback",
+  "scopes": [
+    "xion:identity:read",
+    "xion:blockchain:read",
+    "xion:transactions:submit"
+  ]
+}

@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* Verona type system: EB Garamond for headlines, Hedvig Letters for body/UI,
+   Inter retained as the documented utility fallback. */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Hedvig+Letters+Sans&family=Hedvig+Letters+Serif&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,30 +9,166 @@
 html,
 body {
   height: 100%;
+  background-color: var(--root-bg);
 }
 
 body {
   transition: color 0.5s, background-color 0.5s;
   line-height: 1.6;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans',
-    'Droid Sans', 'Helvetica Neue', sans-serif;
+  /* Hedvig Sans is the design system's face for UI and technical clarity, which
+     suits an explorer's dense tabular data better than the serif body face. */
+  font-family: 'Hedvig Letters Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Verona surfaces. Light bands sit on Linen/Seashell with Sea text; dark product
+   surfaces use Forest with Linen text. Sea stays reserved for standalone brand moments instead of being paired with
+   Forest across product surfaces. */
 :root {
-  --text-main: #333;
-  --text-secondary: #4b525d;
-  --bg-active: #fbfbfc;
+  --root-bg: #f8f7f3; /* bento bg / Linen */
+  --color-base-100: #ffffff; /* bento panel */
+  --text-main: #111827; /* bento ink */
+  --text-secondary: #6b7280; /* bento muted */
+  --bg-active: #f7f3ec; /* bento hover */
 }
 
-html.dark,
 html[data-theme='dark'] {
-  --text-main: #f7f7f7;
-  --text-secondary: #6f6e84;
-  --bg-active: #242b40;
+  --root-bg: #090f0c; /* deep Forest */
+  --color-base-100: #19271f; /* Forest */
+  --text-main: #f8f7f3; /* Linen */
+  --text-secondary: #c4d0ca; /* muted Linen on Forest */
+  --bg-active: #22362b; /* Verona Grey */
+  --panel-border: rgb(47 72 66 / 0.7);
+}
+
+html[data-theme='dark'] .bg-base-100 {
+  background-color: #19271f;
+}
+
+html[data-theme='dark'] th,
+html[data-theme='dark'] .bg-base-200 {
+  background-color: #101a14;
+}
+
+html[data-theme='dark'] tr.hover:hover {
+  background-color: #22362b;
+}
+
+html[data-theme='dark'] .bg-base-100.rounded,
+html[data-theme='dark'] .bg-base-100.rounded-md,
+html[data-theme='dark'] .bg-base-100.rounded-lg {
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.16);
+}
+
+/* DEAD RULE - DO NOT "FIX" THE COLON WITHOUT READING THIS.
+   The third selector should be `.dark\:text-white` (escaped). Unescaped,
+   `:text-white` parses as an unknown pseudo-class, which invalidates the whole
+   selector list, so the browser drops this rule entirely - verified: the
+   stylesheet reports 0 cssRules for it. It has therefore never applied.
+   Escaping the colon would silently re-point 31 `text-white`/`!text-white`
+   usages to Linen in dark mode all at once. Left inert deliberately; the
+   intended behaviour needs to be re-decided, not resurrected by accident. */
+html[data-theme='dark'] .text-white,
+html[data-theme='dark'] .\!text-white,
+html[data-theme='dark'] .dark:text-white {
+  color: #f8f7f3 !important;
+}
+
+html[data-theme='dark'] .modal-box {
+  background-color: #19271f;
+}
+
+html[data-theme='dark'] input,
+html[data-theme='dark'] textarea.textarea,
+html[data-theme='dark'] select.select {
+  background-color: #101a14;
+}
+
+/* ---------------------------------------------------------------------------
+   Brand overrides. Everything above is structural; everything here is Verona.
+   Swap these four values (plus the daisyUI themes in tailwind.config.js) and the
+   whole app re-themes - no component changes.
+   --------------------------------------------------------------------------- */
+:root {
+  --hero-bg: #192550; /* Sea */
+  --hero-image: url('/verona-bg.png');
+  --hero-scrim: rgba(25, 37, 80, 0.74); /* deepens the texture to match verona.dev */
+  --hero-ink: #f8f7f3; /* Linen */
+}
+
+.uptime-legend-swatch {
+  display: inline-block;
+  width: 4px;
+  min-height: 1.25rem;
+}
+
+.uptime-unknown { background-color: #4cb1df; }
+.uptime-committed { background-color: #2f7d57; }
+.uptime-precommitted { background-color: #bea64d; }
+.uptime-missed { background-color: #bb392a; }
+
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link),
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):hover,
+html[data-theme='light'] :where(a.link, a.text-primary, .btn-link):focus-visible,
+html[data-theme='light'] .link-primary,
+html[data-theme='light'] .link-primary:hover,
+html[data-theme='light'] .link-primary:focus-visible,
+html[data-theme='light'] .text-primary,
+html[data-theme='light'] .text-info {
+  color: #4cb1df;
+}
+
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link),
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):hover,
+html[data-theme='dark'] :where(a.link, a.text-primary, .btn-link):focus-visible,
+html[data-theme='dark'] .link-primary,
+html[data-theme='dark'] .link-primary:hover,
+html[data-theme='dark'] .link-primary:focus-visible,
+html[data-theme='dark'] .text-primary,
+html[data-theme='dark'] .text-info {
+  color: #b56135;
+}
+
+/* Keep link hover feedback consistent across native anchors and RouterLinks. */
+html[data-theme='light'] a:not(.btn):not(.tab):hover {
+  color: #b56135;
+  text-decoration: underline;
+}
+
+html[data-theme='dark'] a:not(.btn):not(.tab),
+html[data-theme='dark'] .btn-link {
+  color: #4cb1df !important;
+}
+
+html[data-theme='dark'] a:not(.btn):not(.tab):hover,
+html[data-theme='dark'] .btn-link:hover {
+  color: #b56135 !important;
+  text-decoration: underline;
+}
+
+.verona-sidebar a:hover {
+  text-decoration: none !important;
+}
+
+html[data-theme='dark'] .text-primary.dark\:invert {
+  filter: none;
+}
+
+html[data-theme='light'] .uptime-panel {
+  border: 1px solid #d5cbb9;
+  box-shadow: 0 8px 24px rgb(25 37 80 / 0.08);
+}
+
+/* Headlines and brand moments use the Garamond stack. */
+h1,
+h2,
+.card-title {
+  font-family: 'EB Garamond', 'Instrument Serif', Georgia, serif;
 }
 
 .table th:first-child {

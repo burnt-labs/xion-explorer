@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "高级",
     "dashboard": "面板首页",
     "blocks": "区块和交易",
     "staking": "质押生息",
@@ -10,7 +11,7 @@
     "supply": "资产供应量",
     "account": "账户列表",
     "state-sync": "状态同步",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "合约",
     "widget": "Widgets",
     "tx": "交易",
     "ibc": "IBC",
@@ -46,6 +47,7 @@
     "total_value": "总市值",
     "delegations": "质押列表",
     "no_delegations": "没有质押",
+    "manage_staking": "管理质押",
     "btn_delegate": "质押",
     "btn_redelegate": "再质押",
     "btn_withdraw": "提取",

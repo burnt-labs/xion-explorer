@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "Avanzado",
     "dashboard": "Panel de control",
     "blocks": "Bloques",
     "staking": "Staking",
@@ -7,7 +8,7 @@
     "parameters": "Parámetros",
     "uptime": "Tiempo en línea",
     "state-sync": "Sincronización de estado",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "Contratos",
     "widget": "Widgets",
     "tx": "Transacciones",
     "ibc": "IBC",
@@ -49,6 +50,7 @@
     "total_value": "Valor total",
     "delegations": "Delegaciones",
     "no_delegations": "Sin delegaciones",
+    "manage_staking": "Gestionar staking",
     "btn_delegate": "Delegar",
     "btn_redelegate": "Redelegar",
     "btn_withdraw": "Retirar",

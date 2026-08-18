@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "고급",
     "dashboard": "대시보드",
     "blocks": "블록",
     "staking": "스테이킹",
@@ -7,7 +8,7 @@
     "parameters": "파라미터",
     "uptime": "업타임",
     "state-sync": "스테이트 싱크",
-    "cosmwasm": "코스모왓솜",
+    "cosmwasm": "계약",
     "widget": "위젯",
     "tx": "트랜잭션",
     "ibc": "IBC",
@@ -49,6 +50,7 @@
     "total_value": "총 가치",
     "delegations": "위임",
     "no_delegations": "위임 없음",
+    "manage_staking": "스테이킹 관리",
     "btn_delegate": "위임하기",
     "btn_redelegate": "재위임하기",
     "btn_withdraw": "출금하기",

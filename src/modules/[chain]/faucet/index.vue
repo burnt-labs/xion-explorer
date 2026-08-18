@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import AdBanner from '@/components/ad/AdBanner.vue';
 import { get } from '@/libs';
 import { useBlockchain, useFormatter, useGovStore } from '@/stores';
 import { ref, onMounted, computed } from 'vue';
@@ -128,18 +127,16 @@ onMounted(() => {
       </button>
     </div>
 
-    <AdBanner id="home-banner-ad" unit="banner" />
-
     <div class="bg-base-100 my-5 px-4 pt-3 pb-4 rounded shadow">
       <h2 class="card-title">Enable Faucet</h2>
       <div class="mt-4">
         <span class="text-base"> 1. Submit chain configuration</span>
         <div class="mockup-code bg-base-200 my-2 gap-4">
           <div v-for="it in checklist">
-            <pre><code class="text-gray-800 dark:invert">{{ it.title }}: </code>{{ it.status ? '✅' : '❌' }} </pre>
+            <pre><code class="text-base-content dark:invert">{{ it.title }}: </code>{{ it.status ? '✅' : '❌' }} </pre>
           </div>
 
-          <pre class="text-xs text-red-500">{{ configChecker }}</pre>
+          <pre class="text-xs text-error">{{ configChecker }}</pre>
           <pre></pre>
           <a
             class="btn-ghost text-white rounded-md p-2 ml-4"
@@ -150,10 +147,10 @@ onMounted(() => {
 
         <span class="text-base"> 2. Fund the faucet account</span>
         <div class="mockup-code bg-base-200 my-2">
-          <pre data-prefix=">"><code class=" text-gray-800 dark:invert"> Faucet Address: {{ faucet }} </code></pre>
+          <pre data-prefix=">"><code class=" text-base-content dark:invert"> Faucet Address: {{ faucet }} </code></pre>
           <pre
             data-prefix=">"
-          ><code class="text-gray-800 dark:invert"> Balances: {{ format.formatTokens(balances) }} </code></pre>
+          ><code class="text-base-content dark:invert"> Balances: {{ format.formatTokens(balances) }} </code></pre>
         </div>
       </div>
     </div>
@@ -161,11 +158,11 @@ onMounted(() => {
     <div class="modal" role="dialog">
       <div class="modal-box">
         <div v-if="ret.status === 'error'">
-          <h3 class="font-bold text-red-500">Error</h3>
+          <h3 class="font-bold text-error">Error</h3>
           <div>{{ ret.message }}</div>
         </div>
         <div v-else-if="ret.status === 'ok'">
-          <h3 class="font-bold text-green-500">Token Sent!</h3>
+          <h3 class="font-bold text-success">Token Sent!</h3>
           <div class="text-center mt-4">
             <RouterLink :to="`/${chainStore.chainName}/tx/${ret.result.txhash}`">View Transaction</RouterLink>
           </div>
@@ -177,7 +174,6 @@ onMounted(() => {
         </div>
         <div class="py-2">
           <div>
-            <AdBanner id="popup-ad" unit="popup" />
           </div>
         </div>
       </div>

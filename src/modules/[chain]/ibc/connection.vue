@@ -57,13 +57,13 @@ function pageload(p: number) {
             class="btn btn-xs btn-link mr-1"
             @click="ibcStore.fetchConnection(i)"
             >{{
-              s.chain_1.chain_name === ibcStore.chainName
+              ibcStore.isCurrentChain(s.chain_1)
                 ? s.chain_2.chain_name
                 : s.chain_1.chain_name
             }}
             &#x21cc;
             {{
-              s.chain_1.chain_name === ibcStore.chainName
+              ibcStore.isCurrentChain(s.chain_1)
                 ? s.chain_1.chain_name
                 : s.chain_2.chain_name
             }}</span
@@ -97,3 +97,9 @@ function pageload(p: number) {
     </div>
   </div>
 </template>
+
+<route>
+{
+  meta: { i18n: 'ibc', titleKey: 'ibc.title', order: 9 }
+}
+</route>

@@ -6,8 +6,8 @@ import type { GovProposal, PaginatedProposals } from '@/types/';
 
 // which registry is store
 export const store = 'name'; // name or version
-// Blockchain Name
-export const name = 'xion';
+// Blockchain Name (must match the chain's chain_name slug)
+export const name = 'verona';
 
 export function proposalAdapter(p: any): GovProposal {
   if (p) {

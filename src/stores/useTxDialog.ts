@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { useWalletStore } from './useWalletStore';
-import { useBlockchain } from './useBlockchain';
+import { useWalletStore } from './verona/useWalletStore';
+import { useBlockchain } from './verona/useBlockchain';
 import router from '@/router';
 
 let CALLBACK: any = null;
@@ -12,6 +12,7 @@ export const useTxDialog = defineStore('txDialogStore', {
       type: 'send',
       endpoint: '',
       params: '',
+      visible: false,
     };
   },
   getters: {
@@ -42,12 +43,17 @@ export const useTxDialog = defineStore('txDialogStore', {
       this.sender = sender;
       this.endpoint = endpoint;
       this.params = JSON.stringify(param);
+      this.visible = true;
+    },
+    close() {
+      this.visible = false;
     },
     open(type: string, param: any, callback?: Function) {
       this.type = type;
       this.sender = this.walletAddress;
       this.endpoint = this.currentEndpoint || '';
       this.params = JSON.stringify(param);
+      this.visible = true;
       if (callback) {
         CALLBACK = callback;
       } else {

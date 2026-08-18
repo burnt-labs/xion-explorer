@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
   total: { type: String },
   limit: { type: Number },
   callback: { type: Function, required: true },
+  page: { type: Number, default: 1 },
 });
-const current = ref(1);
-const showSize = 3;
+const current = ref(props.page);
+watch(() => props.page, (page) => (current.value = page));
 const pages = computed(() => {
   const pages: { color: string; page: number }[] = [];
   const total = Number(props.total || 0);
@@ -16,11 +17,6 @@ const pages = computed(() => {
     while (true) {
       if (page * props.limit >= total) break;
       page += 1;
-      if (total / props.limit > 10 && page > showSize && page < total / props.limit - showSize + 1) {
-        if (!(page >= current.value - 1 && page <= current.value + 1)) {
-          continue;
-        }
-      }
       pages.push({
         color: page === current.value ? 'btn-primary' : '',
         page: page,
@@ -37,11 +33,11 @@ function gotoPage(pageNum: number) {
 </script>
 <template>
   <div class="my-5 text-center">
-    <div v-if="total && limit" class="btn-group">
+    <div v-if="total && limit" class="inline-flex max-w-full flex-wrap justify-center gap-1">
       <button
         v-for="{ page, color } in pages"
         :key="page"
-        class="btn bg-gray-100 text-gray-500 hover:text-white border-none dark:bg-gray-800 dark:text-white"
+        class="btn bg-base-200 text-base-content/70 hover:text-primary-content border-none"
         :class="{
           '!btn-primary': color === 'btn-primary',
         }"

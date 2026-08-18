@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
-import { useBlockchain } from './useBlockchain';
+import { useBlockchain } from './verona/useBlockchain';
 import type { PageRequest, PaginatedProposals } from '@/types';
-import { LoadingStatus } from './useDashboard';
-import { useWalletStore } from './useWalletStore';
+import { LoadingStatus } from './verona/useDashboard';
+import { useWalletStore } from './verona/useWalletStore';
 import { reactive } from 'vue';
 
 export const useGovStore = defineStore('govStore', {

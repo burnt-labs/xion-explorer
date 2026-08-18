@@ -1,0 +1,604 @@
+<script lang="ts" setup>
+import { useBlockchain, useFormatter, useStakingStore, useTxDialog } from '@/stores';
+import DynamicComponent from '@/components/dynamic/DynamicComponent.vue';
+import { computed, ref } from '@vue/reactivity';
+import { onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
+
+import type { AuthAccount, Delegation, TxResponse, DelegatorRewards, UnbondingResponses } from '@/types';
+import type { Coin } from '@cosmjs/amino';
+import Countdown from '@/components/Countdown.vue';
+import PaginationBar from '@/components/PaginationBar.vue';
+import { fromBase64 } from '@cosmjs/encoding';
+import { PageRequest } from '@/types';
+import { useWasmStore } from '../../cosmwasm/WasmStore';
+import StakingActionDialog from '@/components/verona/StakingActionDialog.vue';
+import { useQRCode } from '@vueuse/integrations/useQRCode';
+
+const props = defineProps(['address', 'chain']);
+const addressQrCode = useQRCode(computed(() => String(props.address || '')));
+
+const blockchain = useBlockchain();
+const stakingStore = useStakingStore();
+const dialog = useTxDialog();
+const wasmStore = useWasmStore();
+const format = useFormatter();
+const account = ref({} as AuthAccount);
+const txs = ref({} as TxResponse[]);
+const delegations = ref([] as Delegation[]);
+const rewards = ref({} as DelegatorRewards);
+const balances = ref([] as Coin[]);
+const recentReceived = ref([] as TxResponse[]);
+const contracts = ref<string[]>([]);
+const contractsPage = ref(new PageRequest());
+const contractsTotal = ref('0');
+const unbonding = ref([] as UnbondingResponses[]);
+const expandedAssetCategory = ref<string | null>(null);
+const addressQrModal = ref(false);
+const addressCopied = ref(false);
+const publicKeyCopied = ref(false);
+const copiedTxHash = ref('');
+const stakingActionDialog = ref<InstanceType<typeof StakingActionDialog>>();
+const chart = {};
+onMounted(() => {
+  loadAccount(props.address);
+  loadContracts(1);
+});
+
+function loadContracts(page: number) {
+  contractsPage.value.count_total = false;
+  contractsPage.value.setPage(page);
+  wasmStore.wasmClient.getWasmContractsByCreator(props.address, contractsPage.value).then((response) => {
+    contracts.value = response.contract_addresses || response.contracts || [];
+    contractsTotal.value = response.pagination?.total || String(contracts.value.length);
+  });
+}
+async function copyTxHash(hash: string) {
+  await navigator.clipboard.writeText(hash);
+  copiedTxHash.value = hash;
+  window.setTimeout(() => {
+    if (copiedTxHash.value === hash) copiedTxHash.value = '';
+  }, 1200);
+}
+const assetCategories = computed(() => {
+  const unbondingCoins = unbonding.value.flatMap((response) =>
+    response.entries.map((entry) => ({ amount: entry.balance, denom: stakingStore.params.bond_denom }))
+  );
+  const categories = [
+    { label: 'Available', icon: 'mdi-account-cash', iconClass: 'text-info', backgroundClass: 'bg-info', coins: balances.value },
+    { label: 'Delegations', icon: 'mdi-user-clock', iconClass: 'text-warning', backgroundClass: 'bg-warning', coins: delegations.value.map((item) => item.balance) },
+    { label: 'Rewards', icon: 'mdi-account-arrow-up', iconClass: 'text-success', backgroundClass: 'bg-success', coins: rewards.value?.total || [] },
+    { label: 'Unbonding', icon: 'mdi-account-arrow-right', iconClass: 'text-error', backgroundClass: 'bg-error', coins: unbondingCoins },
+  ];
+
+  return categories.map((category) => ({
+    ...category,
+    amount: category.coins.reduce((total, coin) => total + format.tokenAmountNumber(coin), 0),
+    value: category.coins.reduce((total, coin) => total + format.tokenValueNumber(coin), 0),
+  }));
+});
+
+const totalAmount = computed(() => {
+  return assetCategories.value.reduce((total, category) => total + category.amount, 0);
+});
+
+const totalValue = computed(() => {
+  return format.formatNumber(assetCategories.value.reduce((total, category) => total + category.value, 0), '0,0.00');
+});
+
+function loadAccount(address: string) {
+  blockchain.rpc.getAuthAccount(address).then((x) => {
+    account.value = x.account;
+  });
+  blockchain.rpc.getTxsBySender(address).then((x) => {
+    txs.value = x.tx_responses;
+  });
+  blockchain.rpc.getDistributionDelegatorRewards(address).then((x) => {
+    rewards.value = x;
+  });
+  blockchain.rpc.getStakingDelegations(address).then((x) => {
+    delegations.value = x.delegation_responses;
+  });
+  blockchain.rpc.getBankBalances(address).then((x) => {
+    balances.value = x.balances;
+  });
+  blockchain.rpc.getStakingDelegatorUnbonding(address).then((x) => {
+    unbonding.value = x.unbonding_responses;
+  });
+
+  const receivedQuery = `?&pagination.reverse=true&events=coin_received.receiver='${address}'&pagination.limit=5`;
+  blockchain.rpc.getTxs(receivedQuery, {}).then((x) => {
+    recentReceived.value = x.tx_responses;
+  });
+}
+
+function updateEvent() {
+  loadAccount(props.address);
+}
+
+function toggleAssetCategory(label: string) {
+  expandedAssetCategory.value = expandedAssetCategory.value === label ? null : label;
+}
+
+async function copyAddress() {
+  await navigator.clipboard.writeText(props.address);
+  addressCopied.value = true;
+  window.setTimeout(() => (addressCopied.value = false), 1200);
+}
+
+async function copyPublicKey(value: string) {
+  await navigator.clipboard.writeText(value);
+  publicKeyCopied.value = true;
+  window.setTimeout(() => (publicKeyCopied.value = false), 1200);
+}
+
+function chooseStakingAction(validatorAddress = '') {
+  stakingActionDialog.value?.open(validatorAddress);
+}
+
+function mapAmount(events: { type: string; attributes: { key: string; value: string }[] }[]) {
+  if (!events) return [];
+  return events
+    .find((x) => x.type === 'coin_received')
+    ?.attributes.filter((x) => x.key === 'YW1vdW50' || x.key === `amount`)
+    .map((x) => (x.key === 'amount' ? x.value : String.fromCharCode(...fromBase64(x.value))));
+}
+</script>
+<template>
+  <div v-if="account">
+    <!-- address -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <div class="flex items-center">
+        <!-- img -->
+        <button
+          type="button"
+          class="inline-flex relative w-11 h-11 rounded-md"
+          aria-label="Show address QR code"
+          @click="addressQrModal = true"
+        >
+          <div class="w-11 h-11 absolute rounded-md opacity-10 bg-primary"></div>
+          <div class="w-full inline-flex items-center align-middle flex-none justify-center">
+            <Icon icon="mdi-qrcode" class="text-primary" style="width: 27px; height: 27px" />
+          </div>
+        </button>
+        <!-- content -->
+        <div class="flex flex-1 flex-col truncate pl-4">
+          <h2 class="text-sm card-title">{{ $t('account.address') }}:</h2>
+          <div class="flex items-center gap-1 overflow-hidden">
+            <span class="text-xs truncate">{{ address }}</span>
+            <button type="button" class="btn btn-ghost btn-xs shrink-0" :aria-label="addressCopied ? 'Address copied' : 'Copy address'" @click="copyAddress">
+              <Icon :icon="addressCopied ? 'mdi-check' : 'mdi-content-copy'" class="text-sm" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input v-model="addressQrModal" type="checkbox" class="modal-toggle" />
+    <div class="modal" role="dialog" aria-labelledby="address-qr-title">
+      <div class="modal-box max-w-sm text-center">
+        <div class="flex items-center justify-between">
+          <h2 id="address-qr-title" class="text-xl font-semibold">Account Address</h2>
+          <button type="button" class="btn btn-circle btn-ghost btn-sm" aria-label="Close" @click="addressQrModal = false">✕</button>
+        </div>
+        <img :src="addressQrCode" alt="Account address QR code" class="mx-auto my-6 h-64 w-64 rounded" />
+        <button type="button" class="flex w-full items-center justify-center gap-2 break-all text-sm" @click="copyAddress">
+          <span>{{ address }}</span>
+          <Icon :icon="addressCopied ? 'mdi-check' : 'mdi-content-copy'" class="shrink-0" />
+        </button>
+      </div>
+      <button type="button" class="modal-backdrop" aria-label="Close" @click="addressQrModal = false"></button>
+    </div>
+
+    <!-- Assets -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <div class="flex justify-between">
+        <h2 class="card-title mb-4">{{ $t('account.assets') }}</h2>
+        <!-- button -->
+        <div class="flex justify-end mb-4 pr-5">
+          <label for="send" class="btn btn-primary btn-sm mr-2" @click="dialog.open('send', {}, updateEvent)">{{
+            $t('account.btn_send')
+          }}</label>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm mr-2"
+            @click="chooseStakingAction()"
+          >
+            {{ $t('account.btn_delegate') }}
+          </button>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div>
+          <div>
+            <div v-for="category in assetCategories" :key="category.label" class="mb-2">
+              <button
+                type="button"
+                class="flex w-full items-center rounded px-4 py-1 text-left hover:bg-active"
+                :aria-expanded="expandedAssetCategory === category.label"
+                @click="toggleAssetCategory(category.label)"
+              >
+                <div class="w-9 h-9 rounded overflow-hidden flex items-center justify-center relative mr-4">
+                  <Icon :icon="category.icon" :class="category.iconClass" size="20" />
+                  <div class="absolute top-0 bottom-0 left-0 right-0 opacity-20" :class="category.backgroundClass"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">{{ category.label }}</div>
+                  <div class="text-xs">{{ format.calculatePercent(category.amount, totalAmount) }}</div>
+                </div>
+                <div class="text-xs truncate relative py-1 px-3 rounded-full w-fit text-primary dark:invert mr-2">
+                  <span class="inset-x-0 inset-y-0 opacity-10 absolute bg-primary dark:invert text-sm"></span>
+                  ${{ format.formatNumber(category.value, '0,0.[00]') }}
+                </div>
+                <Icon
+                  icon="mdi-chevron-down"
+                  class="text-base-content/60 transition-transform"
+                  :class="{ 'rotate-180': expandedAssetCategory === category.label }"
+                />
+              </button>
+              <div v-if="expandedAssetCategory === category.label" class="ml-4 mr-4 border-l border-base-300 pl-4 py-2">
+                <div v-if="category.coins.length === 0" class="text-xs text-base-content/60">No assets</div>
+                <div v-for="(coin, index) in category.coins" :key="`${coin.denom}-${index}`" class="flex items-center justify-between py-1 text-xs">
+                  <div class="flex items-center">
+                    <div class="relative mr-2 flex h-6 w-6 items-center justify-center overflow-hidden rounded">
+                      <Icon :icon="category.icon" :class="category.iconClass" size="14" />
+                      <div class="absolute inset-0 opacity-20" :class="category.backgroundClass"></div>
+                    </div>
+                    <span>{{ format.formatToken(coin) }}</span>
+                  </div>
+                  <span class="text-base-content/70">${{ format.tokenValue(coin) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="mt-4 text-lg font-semibold mr-5 pl-5 border-t pt-4 text-right"
+          >
+            {{ $t('account.total_value') }}: ${{ totalValue }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delegations -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <h2 class="card-title">{{ $t('account.delegations') }}</h2>
+        <label
+          for="withdraw"
+          class="btn btn-primary btn-sm"
+          @click="dialog.open('withdraw', {}, updateEvent)"
+        >
+          Withdraw All Rewards
+        </label>
+      </div>
+      <div class="overflow-hidden rounded-lg bg-base-100">
+        <table class="table w-full text-sm">
+          <thead class="bg-base-200">
+            <tr>
+              <th class="py-3">{{ $t('account.validator') }}</th>
+              <th class="py-3">{{ $t('account.delegation') }}</th>
+              <th class="py-3">{{ $t('account.rewards') }}</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr v-if="delegations.length === 0">
+              <td colspan="10">
+                <div class="text-center">{{ $t('account.no_delegations') }}</div>
+              </td>
+            </tr>
+            <tr
+              v-for="(v, index) in delegations"
+              :key="index"
+              class="hover:bg-active"
+            >
+              <td class="text-primary py-3">
+                <RouterLink :to="`/${chain}/staking/${v.delegation.validator_address}`" @click.stop>{{
+                  format.validatorFromBech32(v.delegation.validator_address) || v.delegation.validator_address
+                }}</RouterLink>
+              </td>
+              <td class="py-3">
+                <button
+                  type="button"
+                  class="verona-action-link text-left"
+                  @click="chooseStakingAction(v.delegation.validator_address)"
+                >
+                  {{ format.formatToken(v.balance, true, '0,0.[000000]') }}
+                </button>
+              </td>
+              <td class="py-3">
+                <label
+                  for="withdraw"
+                  class="verona-action-link cursor-pointer"
+                  @click="dialog.open('withdraw', { validator_address: v.delegation.validator_address }, updateEvent)"
+                >
+                  {{
+                    format.formatTokens(
+                      rewards?.rewards?.find((x) => x.validator_address === v.delegation.validator_address)?.reward
+                    )
+                  }}
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <StakingActionDialog ref="stakingActionDialog" :on-confirmed="updateEvent" />
+
+    <!-- Unbonding Delegations -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow" v-if="unbonding && unbonding.length > 0">
+      <h2 class="card-title mb-4">{{ $t('account.unbonding_delegations') }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table text-sm w-full">
+          <thead>
+            <tr>
+              <th class="py-3">{{ $t('account.creation_height') }}</th>
+              <th class="py-3">{{ $t('account.initial_balance') }}</th>
+              <th class="py-3">{{ $t('account.balance') }}</th>
+              <th class="py-3">{{ $t('account.completion_time') }}</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm" v-for="(v, index) in unbonding" :key="index">
+            <tr>
+              <td class="text-primary py-3 bg-slate-200" colspan="10">
+                <RouterLink :to="`/${chain}/staking/${v.validator_address}`">{{ v.validator_address }}</RouterLink>
+              </td>
+            </tr>
+            <tr v-for="entry in v.entries">
+              <td class="py-3">{{ entry.creation_height }}</td>
+              <td class="py-3">
+                {{
+                  format.formatToken(
+                    {
+                      amount: entry.initial_balance,
+                      denom: stakingStore.params.bond_denom,
+                    },
+                    true,
+                    '0,0.[00]'
+                  )
+                }}
+              </td>
+              <td class="py-3">
+                {{
+                  format.formatToken(
+                    {
+                      amount: entry.balance,
+                      denom: stakingStore.params.bond_denom,
+                    },
+                    true,
+                    '0,0.[00]'
+                  )
+                }}
+              </td>
+              <td class="py-3">
+                <Countdown :time="new Date(entry.completion_time).getTime() - new Date().getTime()" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <h2 class="card-title mb-4">{{ $t('cosmwasm.contract_list') }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table w-full text-sm">
+          <thead>
+            <tr>
+              <th class="py-3">{{ $t('cosmwasm.contract_list') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="contracts.length === 0">
+              <td class="py-3 text-center text-base-content/60">No contracts</td>
+            </tr>
+            <tr v-for="contract in contracts" :key="contract">
+              <td class="py-3">
+                <RouterLink
+                  :to="`/${chain}/cosmwasm/0/transactions?contract=${contract}`"
+                  class="text-primary dark:invert"
+                >
+                  {{ contract }}
+                </RouterLink>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <PaginationBar
+          v-if="Number(contractsTotal) > contractsPage.limit"
+          :limit="contractsPage.limit"
+          :total="contractsTotal"
+          :callback="loadContracts"
+        />
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <h2 class="card-title mb-4">{{ $t('account.transactions') }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table w-full text-sm">
+          <thead>
+            <tr>
+              <th class="py-3">{{ $t('account.height') }}</th>
+              <th class="py-3">{{ $t('account.hash') }}</th>
+              <th class="py-3">{{ $t('account.messages') }}</th>
+              <th class="py-3">{{ $t('account.time') }}</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr v-if="txs.length === 0">
+              <td colspan="10">
+                <div class="text-center">{{ $t('account.no_transactions') }}</div>
+              </td>
+            </tr>
+            <tr v-for="(v, index) in txs" :key="index">
+              <td class="text-sm py-3">
+                <RouterLink
+                  :to="`/${chain}/block/${v.height}`"
+                  class="text-primary dark:invert"
+                  >{{ v.height }}</RouterLink
+                >
+              </td>
+              <td class="py-3" style="max-width: 200px">
+                <div class="flex min-w-0 items-center gap-1">
+                <RouterLink
+                  :to="`/${chain}/tx/${v.txhash}`"
+                  class="truncate text-primary dark:invert"
+                >
+                  {{ v.txhash }}
+                </RouterLink>
+                <button type="button" class="btn btn-ghost btn-xs shrink-0" :aria-label="copiedTxHash === v.txhash ? 'Transaction hash copied' : 'Copy transaction hash'" @click="copyTxHash(v.txhash)"><Icon :icon="copiedTxHash === v.txhash ? 'mdi-check' : 'mdi-content-copy'" class="h-4 w-4" /></button>
+                </div>
+              </td>
+              <td class="flex items-center py-3">
+                <div class="mr-2">
+                  {{ format.messages(v.tx.body.messages) }}
+                </div>
+                <Icon v-if="v.code === 0" icon="mdi-check" class="text-success text-lg" />
+                <Icon v-else icon="mdi-multiply" class="text-error text-lg" />
+              </td>
+              <td class="py-3">
+                {{ format.toLocaleDate(v.timestamp) }}
+                <span class="text-xs">({{ format.toDay(v.timestamp, 'from') }})</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Received -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <h2 class="card-title mb-4">{{ $t('account.received') }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table w-full text-sm">
+          <thead>
+            <tr>
+              <th class="py-3">{{ $t('account.height') }}</th>
+              <th class="py-3">{{ $t('account.hash') }}</th>
+              <th class="py-3">{{ $t('account.amount') }}</th>
+              <th class="py-3">{{ $t('account.time') }}</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr v-if="recentReceived.length === 0">
+              <td colspan="10">
+                <div class="text-center">{{ $t('account.no_transactions') }}</div>
+              </td>
+            </tr>
+            <tr v-for="(v, index) in recentReceived" :key="index">
+              <td class="text-sm py-3">
+                <RouterLink
+                  :to="`/${chain}/block/${v.height}`"
+                  class="text-primary dark:invert"
+                  >{{ v.height }}</RouterLink
+                >
+              </td>
+              <td class="py-3" style="max-width: 200px">
+                <div class="flex min-w-0 items-center gap-1">
+                <RouterLink
+                  :to="`/${chain}/tx/${v.txhash}`"
+                  class="truncate text-primary dark:invert"
+                >
+                  {{ v.txhash }}
+                </RouterLink>
+                <button type="button" class="btn btn-ghost btn-xs shrink-0" :aria-label="copiedTxHash === v.txhash ? 'Transaction hash copied' : 'Copy transaction hash'" @click="copyTxHash(v.txhash)"><Icon :icon="copiedTxHash === v.txhash ? 'mdi-check' : 'mdi-content-copy'" class="h-4 w-4" /></button>
+                </div>
+              </td>
+              <td class="flex items-center py-3">
+                <div class="mr-2">
+                  {{ mapAmount(v.events)?.join(', ') }}
+                </div>
+                <Icon v-if="v.code === 0" icon="mdi-check" class="text-success text-lg" />
+                <Icon v-else icon="mdi-multiply" class="text-error text-lg" />
+              </td>
+              <td class="py-3">
+                {{ format.toLocaleDate(v.timestamp) }}
+                <span class="text-xs">({{ format.toDay(v.timestamp, 'from') }})</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div class="bg-base-100 px-4 pt-3 pb-4 rounded mb-4 shadow">
+      <h2 class="card-title mb-4">{{ $t('account.acc') }}</h2>
+      <div class="overflow-hidden rounded-lg">
+        <table class="table w-full text-sm">
+          <tbody>
+            <template v-for="(value, key) in account" :key="key">
+              <template v-if="key === 'pub_key' && value && typeof value === 'object'">
+                <tr>
+                  <td class="w-1/5 capitalize">Pub Key Type</td>
+                  <td>{{ value['@type'] }}</td>
+                </tr>
+                <tr>
+                  <td class="w-1/5 capitalize">Pub Key</td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <span class="break-all">{{ value.key }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-circle btn-ghost btn-xs shrink-0"
+                        :aria-label="publicKeyCopied ? 'Public key copied' : 'Copy public key'"
+                        :title="publicKeyCopied ? 'Copied' : 'Copy public key'"
+                        @click="copyPublicKey(value.key)"
+                      >
+                        <Icon :icon="publicKeyCopied ? 'mdi-check' : 'mdi-content-copy'" class="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <tr v-else-if="key === 'address'">
+                <td class="w-1/5 capitalize">Address</td>
+                <td>
+                  <div class="flex items-center gap-2">
+                    <span class="break-all">{{ value }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-circle btn-ghost btn-xs shrink-0"
+                      :aria-label="addressCopied ? 'Address copied' : 'Copy address'"
+                      :title="addressCopied ? 'Copied' : 'Copy address'"
+                      @click="copyAddress"
+                    >
+                      <Icon :icon="addressCopied ? 'mdi-check' : 'mdi-content-copy'" class="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-else>
+                <td class="w-1/5 capitalize">{{ String(key).replaceAll('_', ' ') }}</td>
+                <td><DynamicComponent :value="value" /></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div v-else class="text-no text-sm">{{ $t('account.error') }}</div>
+</template>
+
+<route>
+{
+  meta: { titleKey: 'account.acc' }
+}
+</route>
+
+<style scoped>
+.verona-action-link {
+  color: #4cb1df;
+}
+
+.verona-action-link:hover {
+  color: #b56135;
+  text-decoration: underline;
+}
+</style>

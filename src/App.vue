@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { themeChange } from 'theme-change';
 import { onMounted, onUnmounted, ref } from 'vue';
-import TxDialog from './components/TxDialog.vue';
+import TxDialog from './components/verona/StoreTxDialog.vue';
 import { useBaseStore } from '@/stores';
 
 const REFRESH_INTERVAL = Number(import.meta.env.VITE_REFRESH_INTERVAL) || 6000;

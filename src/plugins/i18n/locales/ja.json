@@ -1,5 +1,6 @@
 {
   "module": {
+    "advanced": "詳細",
     "dashboard": "ダッシュボード",
     "blocks": "ブロック",
     "staking": "ステーキング",
@@ -7,7 +8,7 @@
     "parameters": "パラメータ",
     "uptime": "アップタイム",
     "state-sync": "ステート同期",
-    "cosmwasm": "Cosmwasm",
+    "cosmwasm": "コントラクト",
     "widget": "ウィジェット",
     "tx": "取引",
     "ibc": "IBC",
@@ -49,6 +50,7 @@
     "total_value": "総価値",
     "delegations": "委任",
     "no_delegations": "委任なし",
+    "manage_staking": "ステーキングを管理",
     "btn_delegate": "委任",
     "btn_redelegate": "再委任",
     "btn_withdraw": "引き出し",
