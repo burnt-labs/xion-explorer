@@ -15,17 +15,8 @@ const props = defineProps(['chain']);
 
 const format = useFormatter();
 const chainStore = useBlockchain();
-const defaultLogo = '/unknown.png';
 
-const list = ref(
-  [] as {
-    denom: string;
-    amount: string;
-    base: string;
-    info: string;
-    logo: string;
-  }[]
-);
+const list = ref([] as { denom: string; amount: string; base: string; info: string; logo: string | undefined }[]);
 const loading = ref(true);
 
 const pageRequest = ref(new PageRequest());
@@ -50,17 +41,7 @@ function findGlobalAssetConfig(denom: string) {
   return undefined;
 }
 
-function useDefaultLogo(event: Event) {
-  const image = event.target as HTMLImageElement;
-  if (!image.src.endsWith(defaultLogo)) {
-    image.src = defaultLogo;
-  }
-}
-
-async function mergeDenomMetadata(
-  denom: string,
-  denomsMetadatas: DenomMetadata[]
-): Promise<SupplyAsset> {
+async function mergeDenomMetadata(denom: string, denomsMetadatas: DenomMetadata[]): Promise<SupplyAsset> {
   const denomMetadata = denomsMetadatas.find((d) => d.base.endsWith(denom));
   let asset = findGlobalAssetConfig(denom) as SupplyAsset;
   if (asset && denomMetadata) {
@@ -79,24 +60,17 @@ function pageload(p: number) {
   chainStore.rpc
     .getBankDenomMetadata()
     .then(async (denomsMetaResponse) => {
-      const bankSupplyResponse = await chainStore.rpc.getBankSupply(
-        pageRequest.value
-      );
+      const bankSupplyResponse = await chainStore.rpc.getBankSupply(pageRequest.value);
       list.value = await Promise.all(
         bankSupplyResponse.supply.map(async (coin: Coin) => {
-          const asset = await mergeDenomMetadata(
-            coin.denom,
-            denomsMetaResponse.metadatas
-          );
+          const asset = await mergeDenomMetadata(coin.denom, denomsMetaResponse.metadatas);
           const denom = asset?.symbol || coin.denom;
           return {
             denom: denom.split('/')[denom.split('/').length - 1].toUpperCase(),
-            amount: format
-              .tokenAmountNumber({ amount: coin.amount, denom: denom })
-              .toString(),
+            amount: format.tokenAmountNumber({ amount: coin.amount, denom: denom }).toString(),
             base: asset.base || coin.denom,
             info: asset.display || coin.denom,
-            logo: asset?.logo_URIs?.svg || asset?.logo_URIs?.png || defaultLogo,
+            logo: asset?.logo_URIs?.svg || asset?.logo_URIs?.png || '/logo.svg',
           };
         })
       );
@@ -120,7 +94,7 @@ function pageload(p: number) {
       <tbody v-if="!loading">
         <tr v-for="item in list" class="hover">
           <td>
-            <img :src="item.logo" class="w-7 h-7" @error="useDefaultLogo" />
+            <img v-if="item.logo" :src="item.logo" class="w-7 h-7" />
           </td>
           <td>{{ item.denom }}</td>
           <td>{{ item.amount }}</td>

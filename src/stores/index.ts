@@ -4,7 +4,7 @@ export * from './verona/useCoinGecko';
 export * from './verona/useDashboard';
 export * from './useBaseStore';
 export * from './verona/useFormatter';
-export * from './verona/useGovStore';
+export * from './useGovStore';
 export * from './useMintStore';
 export * from './useStakingStore';
 export * from './useDistributionStore';

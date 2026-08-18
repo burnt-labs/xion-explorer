@@ -9,7 +9,7 @@ import { formatSeconds } from '@/libs/utils';
 import { diff } from 'semver';
 import { fromHex, toBase64 } from '@cosmjs/encoding';
 import { useRouter } from 'vue-router';
-import UptimeView from './UptimeView.vue';
+import UptimeView from '../../uptime/index.vue';
 import ConsensusView from '../../consensus/index.vue';
 import StakingActionDialog from '@/components/verona/StakingActionDialog.vue';
 

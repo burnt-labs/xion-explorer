@@ -90,11 +90,11 @@ const change = computed(() => {
 const color = computed(() => {
   switch (true) {
     case change.value > 0:
-      return 'text-success';
+      return 'text-green-600';
     case change.value === 0:
       return 'text-grey-500';
     case change.value < 0:
-      return 'text-error';
+      return 'text-red-600';
   }
 });
 
@@ -137,7 +137,7 @@ const amount = computed({
           <div class="text-xs mt-2">
             {{ $t('index.rank') }}:
             <div
-              class="badge text-xs badge-error bg-error/10 text-error"
+              class="badge text-xs badge-error bg-[#fcebea] dark:bg-[#41384d] text-red-400"
             >
               #{{ coinInfo.market_cap_rank }}
             </div>
@@ -148,7 +148,7 @@ const amount = computed({
               v-for="(item, index) of comLinks"
               :key="index"
               :href="item.href"
-              class="link link-primary px-2 py-1 rounded-sm no-underline hover:text-primary hover:bg-active dark:hover:bg-slate-800 flex items-center"
+              class="link link-primary px-2 py-1 rounded-sm no-underline hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center"
             >
               <Icon :icon="item?.icon" />
               <span class="ml-1 text-sm uppercase">{{ item?.name }}</span>
@@ -159,11 +159,11 @@ const amount = computed({
             <div class="dropdown dropdown-hover w-full">
               <label>
                 <div
-                  class="bg-base-200 flex items-center justify-between px-4 py-2 cursor-pointer rounded"
+                  class="bg-gray-100 dark:bg-[#384059] flex items-center justify-between px-4 py-2 cursor-pointer rounded"
                 >
                   <div>
                     <div
-                      class="font-semibold text-xl text-base-content"
+                      class="font-semibold text-xl text-[#666] dark:text-white"
                     >
                       {{ ticker?.market?.name || '' }}
                     </div>
@@ -176,7 +176,7 @@ const amount = computed({
 
                   <div class="text-right">
                     <div
-                      class="text-xl font-semibold text-base-content"
+                      class="text-xl font-semibold text-[#666] dark:text-white"
                     >
                       ${{ ticker?.converted_last?.usd }}
                     </div>
@@ -186,7 +186,7 @@ const amount = computed({
               </label>
               <div class="dropdown-content pt-1">
                 <div class="h-64 overflow-auto w-full shadow rounded">
-                  <ul class="menu w-full bg-base-200 rounded">
+                  <ul class="menu w-full bg-gray-100 rounded dark:bg-[#384059]">
                     <li
                       v-for="(item, index) in store.coinInfo.tickers"
                       :key="index"
@@ -202,7 +202,7 @@ const amount = computed({
                           >
                             {{ item?.market?.name }}
                           </div>
-                          <div class="text-sm text-base-content/70">
+                          <div class="text-sm text-gray-500 dark:text-gray-400">
                             {{ shortName(item?.base, item?.coin_id) }}/{{
                               shortName(item?.target, item?.target_coin_id)
                             }}
@@ -308,7 +308,7 @@ const amount = computed({
           <PriceMarketChart />
         </div>
       </div>
-      <div class="h-[1px] w-full bg-base-200"></div>
+      <div class="h-[1px] w-full bg-gray-100 dark:bg-[#384059]"></div>
       <div class="max-h-[250px] overflow-auto p-4 text-sm">
         <MdEditor
           :model-value="coinInfo.description?.en"
@@ -318,7 +318,7 @@ const amount = computed({
       <div class="mx-4 flex flex-wrap items-center">
         <div
           v-for="tag in coinInfo.categories"
-          class="mr-2 mb-4 text-xs bg-base-200 px-3 rounded-full py-1"
+          class="mr-2 mb-4 text-xs bg-gray-100 dark:bg-[#384059] px-3 rounded-full py-1"
         >
           {{ tag }}
         </div>
@@ -365,28 +365,28 @@ const amount = computed({
       <div
         class="grid grid-cols-1 md:!grid-cols-4 auto-cols-auto gap-4 px-4 pb-6"
       >
-        <div class="bg-base-200 rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('account.balance') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.balanceOfStakingToken) }}
           </div>
           <div class="text-sm" :class="color">${{ format.tokenValue(walletStore.balanceOfStakingToken) }}</div>
         </div>
-        <div class="bg-base-200 rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('module.staking') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.stakingAmount) }}
           </div>
           <div class="text-sm" :class="color">${{ format.tokenValue(walletStore.stakingAmount) }}</div>
         </div>
-        <div class="bg-base-200 rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('index.reward') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.rewardAmount) }}
           </div>
           <div class="text-sm" :class="color">${{ format.tokenValue(walletStore.rewardAmount) }}</div>
         </div>
-        <div class="bg-base-200 rounded-sm px-4 py-3">
+        <div class="bg-gray-100 dark:bg-[#373f59] rounded-sm px-4 py-3">
           <div class="text-sm mb-1">{{ $t('index.unbonding') }}</div>
           <div class="text-lg font-semibold text-main">
             {{ format.formatToken(walletStore.unbondingAmount) }}
