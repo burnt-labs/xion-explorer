@@ -24,6 +24,7 @@ interface ImportMetaEnv {
     readonly VITE_PINGPUB_API_URL?: string,
     readonly VITE_IBC_USE_GITHUB_API?: string,
     readonly VITE_TX_MEMO?: string,
+    readonly VITE_DEFAULT_THEME?: 'light' | 'dark',
 }
 
 interface ImportMeta {
