@@ -181,10 +181,13 @@ async function startNode({ version, address, accountNumber }) {
       try {
         reply = { jsonrpc: '2.0', id: request.id, result: handle(request) };
       } catch (error) {
+        // Unexpected request: log the details locally and answer with a
+        // generic JSON-RPC error so the client call fails.
+        console.error(error);
         reply = {
           jsonrpc: '2.0',
           id: request.id,
-          error: { code: -32603, message: String(error), data: '' },
+          error: { code: -32603, message: 'Internal error', data: '' },
         };
       }
       res.setHeader('Content-Type', 'application/json');
