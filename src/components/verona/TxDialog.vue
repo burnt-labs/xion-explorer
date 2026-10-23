@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { coin, GasPrice, SigningStargateClient } from '@cosmjs/stargate';
-import { SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { coin, GasPrice } from '@cosmjs/stargate';
 import { fromBech32, toUtf8 } from '@cosmjs/encoding';
 import { useBlockchain } from '@/stores';
 import { useWalletStore } from '@/stores/verona/useWalletStore';
 import { getAbstraxionSigningClient } from '@/services/abstraxion';
+import {
+  connectCosmWasmSigningClient,
+  connectStargateSigningClient,
+  walletSigner,
+  type WalletProvider,
+} from '@/libs/wallet-signing';
 import type { Validator } from '@/types';
 import { useI18n } from 'vue-i18n';
-
-type KeplrProvider = {
-  enable(chainId: string): Promise<void>;
-  getOfflineSignerAuto(chainId: string): Promise<unknown>;
-};
 
 type DelegatedValidator = {
   address: string;
@@ -254,13 +254,8 @@ watch(() => [props.visible, props.params] as const, ([visible]) => {
   });
 });
 
-async function signer() {
-  const provider = (window as any).keplr as KeplrProvider | undefined;
-  if (!provider) throw new Error('A Keplr-compatible wallet is required');
-  const chainId = chain.current?.chainId;
-  if (!chainId) throw new Error('Chain ID is unavailable');
-  await provider.enable(chainId);
-  return provider.getOfflineSignerAuto(chainId) as any;
+function signer() {
+  return walletSigner((window as any).keplr as WalletProvider | undefined, chain.current?.chainId);
 }
 
 async function submit() {
@@ -281,13 +276,13 @@ async function submit() {
       : 'auto';
     let response;
     if (isWasmExecute.value) {
-      const client = abstractClient || await SigningCosmWasmClient.connectWithSigner(rpc, offlineSigner!, { gasPrice: gasPrice as any });
+      const client = abstractClient || await connectCosmWasmSigningClient(rpc, offlineSigner!, gasPrice);
       response = await client.signAndBroadcast(sender, [{
         typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
         value: { sender, contract: contract.value, msg: toUtf8(message.value), funds: [] },
       }], fee, memo.value);
     } else {
-      const client = abstractClient || await SigningStargateClient.connectWithSigner(rpc, offlineSigner!, { gasPrice });
+      const client = abstractClient || await connectStargateSigningClient(rpc, offlineSigner!, gasPrice);
       const funds = () => coin(baseAmount(), denom.value);
       if (props.type === 'send') response = await client.sendTokens(sender, recipient.value, [funds()], fee, memo.value);
       else if (props.type === 'delegate') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.staking.v1beta1.MsgDelegate', value: { delegatorAddress: sender, validatorAddress: validator.value, amount: funds() } }], fee, memo.value);
