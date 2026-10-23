@@ -7,12 +7,12 @@
   "network_type": "testnet",
   "rpc": [
     {
-      "address": "https://verona-testnet-rpc.polkachu.com",
-      "provider": "Polkachu"
-    },
-    {
       "address": "https://rpc.xion-testnet-2.burnt.com",
       "provider": "🔥BurntLabs🔥"
+    },
+    {
+      "address": "https://verona-testnet-rpc.polkachu.com",
+      "provider": "Polkachu"
     },
     {
       "address": "https://burnt-testnet-rpc.itrocket.net",
@@ -21,12 +21,12 @@
   ],
   "api": [
     {
-      "address": "https://verona-testnet-api.polkachu.com",
-      "provider": "Polkachu"
-    },
-    {
       "address": "https://api.xion-testnet-2.burnt.com",
       "provider": "🔥BurntLabs🔥"
+    },
+    {
+      "address": "https://verona-testnet-api.polkachu.com",
+      "provider": "Polkachu"
     },
     {
       "address": "https://burnt-testnet-api.itrocket.net",

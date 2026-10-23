@@ -157,8 +157,11 @@ export const useBlockchain = defineStore('blockchain', {
         }
         localStorage.removeItem(`endpoint-${chainName}`);
       }
+      // Default to the first listed endpoint: chain configs list the operator's
+      // own (load-balanced) endpoint first and third-party nodes after it, so a
+      // lagging third-party node is only used when the user picks it.
       if (all && all.length) {
-        return all[Math.floor(Math.random() * all.length)];
+        return all[0];
       }
     },
 
