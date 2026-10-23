@@ -8,6 +8,7 @@ import {
   mapWithConcurrency,
   mergeRecentBlocks,
   missingHeights,
+  withTimeout,
 } from '../src/libs/recent-blocks.ts';
 
 const block = (height, tag = '') => ({
@@ -94,4 +95,17 @@ test('mapWithConcurrency handles no items and a non-positive cap', async () => {
     await mapWithConcurrency([1, 2], 0, async (n) => n + 1),
     [2, 3]
   );
+});
+
+test('withTimeout returns the result when the promise settles in time', async () => {
+  assert.equal(
+    await withTimeout(Promise.resolve('block'), 1000, 'fallback'),
+    'block'
+  );
+});
+
+test('withTimeout settles with the fallback when a request stalls', async () => {
+  // A request that never settles must not hold the backfill open.
+  const stalled = new Promise(() => {});
+  assert.equal(await withTimeout(stalled, 20, 'fallback'), 'fallback');
 });

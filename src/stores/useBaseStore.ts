@@ -5,13 +5,15 @@ import dayjs from 'dayjs';
 import type { Block } from '@/types';
 import { hashTx } from '@/libs';
 import { fromBase64 } from '@cosmjs/encoding';
-import { blockHeight, mapWithConcurrency, mergeRecentBlocks, missingHeights } from '@/libs/recent-blocks';
+import { blockHeight, mapWithConcurrency, mergeRecentBlocks, missingHeights, withTimeout } from '@/libs/recent-blocks';
 
 // `"false"` is a truthy string, so compare explicitly.
 const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS === 'true';
 const RECENT_BLOCKS_LIMIT = Number(import.meta.env.VITE_RECENT_BLOCK_LIMIT) || 50;
 // Parallel block requests while backfilling the window.
 const BACKFILL_CONCURRENCY = 6;
+// Give up on one block request after this long; the height is retried next poll.
+const BACKFILL_FETCH_TIMEOUT_MS = 10_000;
 // Set while a backfill is in flight; polls that overlap it only add latest.
 let backfilling = false;
 type Theme = 'light' | 'dark';
@@ -142,9 +144,14 @@ export const useBaseStore = defineStore('baseStore', {
       backfilling = true;
       try {
         const heights = missingHeights(this.recents, blockHeight(latest), RECENT_BLOCKS_LIMIT);
-        const fetched = await mapWithConcurrency(heights, BACKFILL_CONCURRENCY, (h) => this.fetchBlock(h));
-        // A failed fetch has no header; leaving it out keeps the height
-        // missing, so the next poll retries it.
+        // The REST client has no request timeout, so bound each fetch: a
+        // stalled request would otherwise keep `backfilling` set, and later
+        // polls (even after endpoint failover) would stop filling holes.
+        const fetched = await mapWithConcurrency(heights, BACKFILL_CONCURRENCY, (h) =>
+          withTimeout(this.fetchBlock(h), BACKFILL_FETCH_TIMEOUT_MS, {} as Block)
+        );
+        // A failed or timed-out fetch has no header; leaving it out keeps the
+        // height missing, so the next poll retries it.
         return [...fetched.filter((b) => b?.block?.header?.height), latest];
       } finally {
         backfilling = false;
