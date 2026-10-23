@@ -27,8 +27,8 @@ const options = computed(() => {
         rotate: -45,
       },
       show: false,
+      // One label per bar, then the same fixed padding as before.
       categories: baseStore.recents
-        .slice(0, 50)
         .map((x) => x.block.header.height)
         .concat(Array(Math.max(0, 50)).fill('')),
     },

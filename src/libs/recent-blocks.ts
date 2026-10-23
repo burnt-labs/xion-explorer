@@ -38,7 +38,10 @@ export function missingHeights(
 
 /**
  * Merges newly fetched blocks into `recents`: one block per height (incoming
- * wins), ascending, trimmed to the newest `limit`.
+ * wins), ascending, limited to the window (newest - limit, newest]. Trimming by
+ * height, not count, matters when part of a backfill failed: a count cap would
+ * pad the window with an unrelated stale run instead of leaving the holes to be
+ * retried.
  */
 export function mergeRecentBlocks<T extends HeightedBlock>(
   recents: T[],
@@ -48,9 +51,10 @@ export function mergeRecentBlocks<T extends HeightedBlock>(
   const byHeight = new Map<number, T>();
   for (const block of [...recents, ...incoming])
     byHeight.set(blockHeight(block), block);
+  const newest = Math.max(0, ...byHeight.keys());
   return [...byHeight.values()]
-    .sort((a, b) => blockHeight(a) - blockHeight(b))
-    .slice(-limit);
+    .filter((block) => blockHeight(block) > newest - limit)
+    .sort((a, b) => blockHeight(a) - blockHeight(b));
 }
 
 /**

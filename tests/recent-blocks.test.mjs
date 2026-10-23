@@ -109,3 +109,13 @@ test('withTimeout settles with the fallback when a request stalls', async () => 
   const stalled = new Promise(() => {});
   assert.equal(await withTimeout(stalled, 20, 'fallback'), 'fallback');
 });
+
+test('mergeRecentBlocks drops a stale run even when part of the backfill failed', () => {
+  // Resume at 1000 after showing 1..100; requests for 901..910 failed.
+  const stale = range(1, 100).map(block);
+  const partial = range(911, 1000).map(block);
+  const merged = mergeRecentBlocks(stale, partial, 100);
+  assert.deepEqual(heights(merged), range(911, 1000));
+  // The failed heights stay missing, so the next poll asks for them again.
+  assert.deepEqual(missingHeights(merged, 1000, 100), range(901, 910));
+});
