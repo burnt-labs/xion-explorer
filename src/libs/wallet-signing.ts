@@ -1,4 +1,6 @@
 import { SigningCosmWasmClient } from '@cosmjs/cosmwasm';
+import { sha256 } from '@cosmjs/crypto';
+import { fromBase64, toHex } from '@cosmjs/encoding';
 import type { EncodeObject, OfflineSigner } from '@cosmjs/proto-signing';
 import {
   calculateFee,
@@ -56,8 +58,40 @@ export function isRetryableRpcError(error: unknown): boolean {
   return typeof status === 'number' && (status >= 500 || status === 429);
 }
 
+// True when a node rejected a broadcast because it already has that tx: the
+// CometBFT mempool cache answers with a JSON-RPC error, the SDK with "tx
+// already in mempool" (sdk 19) or, once the tx is in a block, "incorrect
+// account sequence" (sdk 32).
+export function isTxAlreadyKnown(outcome: unknown): boolean {
+  if (outcome instanceof Error) {
+    return outcome.message.includes('tx already exists in cache');
+  }
+  const { code, codespace } = outcome as {
+    code?: unknown;
+    codespace?: unknown;
+  };
+  return codespace === 'sdk' && (code === 19 || code === 32);
+}
+
 type RpcRequest = Parameters<RpcClient['execute']>[0];
 type RpcResponse = Awaited<ReturnType<RpcClient['execute']>>;
+
+// The `broadcast_tx_sync` answer for a tx the network already has, so the
+// caller goes on to look the tx up by its hash.
+function broadcastAccepted(request: RpcRequest): RpcResponse {
+  const { tx } = request.params as { tx: string };
+  return {
+    jsonrpc: '2.0',
+    id: request.id,
+    result: {
+      code: 0,
+      data: '',
+      log: '',
+      codespace: '',
+      hash: toHex(sha256(fromBase64(tx))).toUpperCase(),
+    },
+  };
+}
 
 // A CometBFT JSON-RPC client over several HTTP endpoints, in order of
 // preference. A request that fails with a retryable error moves on to the
@@ -67,8 +101,12 @@ type RpcResponse = Awaited<ReturnType<RpcClient['execute']>>;
 // endpoint once and then the one it started on again, so a chain with a
 // single endpoint still gets one retry.
 //
-// Re-sending `broadcast_tx_sync` after a failure is safe on chain: a node that
-// already has the tx rejects the copy (mempool cache or account sequence).
+// A `broadcast_tx_sync` that failed without an answer may still have reached
+// a node, so the copy sent on retry can be rejected as a duplicate (see
+// isTxAlreadyKnown). Such a rejection is answered with the tx hash instead:
+// CosmJS then polls for the tx and reports whether it committed, rather than
+// failing a tx that may still land. The chain never runs it twice: both
+// copies carry the same account sequence.
 export class FailoverRpcClient implements RpcClient {
   readonly urls: readonly string[];
   private readonly clients: HttpClient[];
@@ -85,16 +123,27 @@ export class FailoverRpcClient implements RpcClient {
   }
 
   async execute(request: RpcRequest): Promise<RpcResponse> {
+    const broadcast = request.method === 'broadcast_tx_sync';
     let lastError: unknown;
+    // Set once a broadcast attempt failed without an answer: the tx may
+    // already be in a mempool or a block.
+    let unconfirmed = false;
     for (let attempt = 0; attempt <= this.clients.length; attempt++) {
       const index = (this.current + attempt) % this.clients.length;
       try {
         const response = await this.clients[index].execute(request);
         this.current = index;
-        return response;
+        return unconfirmed && isTxAlreadyKnown(response.result)
+          ? broadcastAccepted(request)
+          : response;
       } catch (error) {
+        if (unconfirmed && isTxAlreadyKnown(error)) {
+          this.current = index;
+          return broadcastAccepted(request);
+        }
         if (!isRetryableRpcError(error)) throw error;
         lastError = error;
+        unconfirmed = broadcast;
       }
     }
     throw lastError;
@@ -107,7 +156,12 @@ export class FailoverRpcClient implements RpcClient {
 
 // The same adaptor choice as CosmJS 0.39 `connectComet`, over the failover
 // client: 0.38 -> Comet38, 1.x -> Comet1, anything else (0.37, and the
-// "0.39.0" that CometBFT 0.40 reports) -> Tendermint37.
+// "0.39.0" that CometBFT 0.40 reports) -> Tendermint37. The adaptor is picked
+// from the first endpoint that answers and kept after a failover. That holds
+// across endpoints on different versions: in CosmJS 0.39 the three adaptors
+// decode status, abci_query, broadcast_tx_sync and tx_search (all that
+// signing uses) identically; they differ only for block_results, commit,
+// validators and broadcast_tx_commit.
 export async function connectFailoverComet(
   rpcs: readonly string[]
 ): Promise<CometClient> {
