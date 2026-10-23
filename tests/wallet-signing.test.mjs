@@ -7,6 +7,7 @@
 // - new accounts get account numbers >= 2^63 (e.g. 2^63 + 123456789);
 // - the node reports `node_info.version` "0.39.0".
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import test from 'node:test';
 
@@ -23,9 +24,18 @@ import { SimulateResponse } from 'cosmjs-types/cosmos/tx/v1beta1/service';
 import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx';
 
+import { isComet1Client, isComet38Client } from '@cosmjs/tendermint-rpc';
+
 import {
   connectCosmWasmSigningClient,
+  connectFailoverComet,
   connectStargateSigningClient,
+  estimateFee,
+  FailoverRpcClient,
+  GAS_MARGIN,
+  GAS_MULTIPLIER,
+  isRetryableRpcError,
+  isTxAlreadyKnown,
   walletSigner,
 } from '../src/libs/wallet-signing.ts';
 
@@ -99,8 +109,13 @@ function abciOk(value) {
 }
 
 // A fake CometBFT RPC node that knows exactly one account.
-async function startNode({ version, address, accountNumber }) {
+// `fail(method)` lets a case make the node misbehave for a method: return an
+// HTTP status (e.g. 502) to answer with it, 'hang' to never answer, or a
+// JSON-RPC body (`{ error }` or `{ result }`) to answer with that. A broadcast
+// tx is recorded even when the node then misbehaves: it reached the node.
+async function startNode({ version, address, accountNumber, fail = () => {} }) {
   const broadcasts = [];
+  const requests = [];
   const handle = ({ method, params }) => {
     switch (method) {
       case 'status':
@@ -132,10 +147,8 @@ async function startNode({ version, address, accountNumber }) {
             })
           ).finish()
         );
-      case 'broadcast_tx_sync': {
-        broadcasts.push(fromBase64(params.tx));
+      case 'broadcast_tx_sync':
         return { code: 0, data: '', log: '', codespace: '', hash: txHash() };
-      }
       default: {
         // `tx_search` for the hash returned above. CometBFT >= 0.37 returns
         // event attributes as plain strings; reading them with the
@@ -177,9 +190,24 @@ async function startNode({ version, address, accountNumber }) {
     req.on('data', (chunk) => (body += chunk));
     req.on('end', () => {
       const request = JSON.parse(body);
+      requests.push(request.method);
+      if (request.method === 'broadcast_tx_sync') {
+        broadcasts.push(fromBase64(request.params.tx));
+      }
+      const failure = fail(request.method);
+      if (failure === 'hang') return;
+      if (typeof failure === 'number') {
+        res.statusCode = failure;
+        res.end('<html>Bad Gateway</html>');
+        return;
+      }
       let reply;
       try {
-        reply = { jsonrpc: '2.0', id: request.id, result: handle(request) };
+        reply = {
+          jsonrpc: '2.0',
+          id: request.id,
+          ...(failure ?? { result: handle(request) }),
+        };
       } catch (error) {
         // Unexpected request: log the details locally and answer with a
         // generic JSON-RPC error so the client call fails.
@@ -199,7 +227,12 @@ async function startNode({ version, address, accountNumber }) {
   return {
     url: `http://127.0.0.1:${port}`,
     broadcasts,
-    close: () => new Promise((resolve) => server.close(resolve)),
+    requests,
+    close: () =>
+      new Promise((resolve) => {
+        server.closeAllConnections();
+        server.close(resolve);
+      }),
   };
 }
 
@@ -267,7 +300,7 @@ async function sendThroughWallet({ version, accountNumber, kind }) {
   const node = await startNode({ version, address, accountNumber });
   try {
     const client = await connectStargateSigningClient(
-      node.url,
+      [node.url],
       signer,
       gasPrice
     );
@@ -342,7 +375,7 @@ for (const [label, version, accountNumber] of [
     const node = await startNode({ version, address, accountNumber });
     try {
       const client = await connectCosmWasmSigningClient(
-        node.url,
+        [node.url],
         signer,
         gasPrice
       );
@@ -391,4 +424,525 @@ test('walletSigner enables the chain and returns the auto signer', async () => {
   await assert.rejects(walletSigner(provider, undefined), {
     message: 'Chain ID is unavailable',
   });
+});
+
+// --- RPC failover -----------------------------------------------------------
+//
+// The testnet chain config lists our RPC first and third-party RPCs after it.
+// When one of them fails (xion v32 upgrade: a third-party node answered 502
+// through Cloudflare or timed out), the dialog must carry on with the next.
+
+// A URL nothing listens on: connections are refused.
+async function deadUrl() {
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  await new Promise((resolve) => server.close(resolve));
+  return `http://127.0.0.1:${port}`;
+}
+
+async function sendVia(urls, signer, address) {
+  const client = await connectStargateSigningClient(urls, signer, gasPrice);
+  const account = await client.getAccount(address);
+  assert.equal(BigInt(account.accountNumber), BIG_ACCOUNT_NUMBER);
+  return client.sendTokens(
+    address,
+    RECIPIENT,
+    [{ denom: 'uxion', amount: '1000' }],
+    'auto',
+    ''
+  );
+}
+
+test(
+  'first RPC answers 502 to abci_query: the send goes through the second',
+  TIMEOUT,
+  async () => {
+    const { direct: signer } = await wallets();
+    const [{ address }] = await signer.getAccounts();
+    const node = (fail) =>
+      startNode({
+        version: V32_COMET,
+        address,
+        accountNumber: BIG_ACCOUNT_NUMBER,
+        fail,
+      });
+    const bad = await node((method) =>
+      method === 'abci_query' ? 502 : undefined
+    );
+    const good = await node();
+    try {
+      const response = await sendVia([bad.url, good.url], signer, address);
+      assert.equal(response.code, 0);
+      assert.equal(bad.broadcasts.length, 0);
+      assert.equal(good.broadcasts.length, 1);
+      await assertSignedFor(
+        good.broadcasts[0],
+        signer,
+        address,
+        BIG_ACCOUNT_NUMBER
+      );
+      // status came from the first node; after its 502 every later request
+      // (account x3, simulate, chain id, broadcast, tx_search) stayed on the
+      // second.
+      assert.deepEqual(bad.requests, ['status', 'abci_query']);
+      assert.deepEqual(good.requests, [
+        'abci_query',
+        'abci_query',
+        'abci_query',
+        'abci_query',
+        'status',
+        'broadcast_tx_sync',
+        'tx_search',
+      ]);
+    } finally {
+      await bad.close();
+      await good.close();
+    }
+  }
+);
+
+test(
+  'first RPC refuses connections: the send goes through the second',
+  TIMEOUT,
+  async () => {
+    const { direct: signer } = await wallets();
+    const [{ address }] = await signer.getAccounts();
+    const good = await startNode({
+      version: V32_COMET,
+      address,
+      accountNumber: BIG_ACCOUNT_NUMBER,
+    });
+    try {
+      const response = await sendVia(
+        [await deadUrl(), good.url],
+        signer,
+        address
+      );
+      assert.equal(response.code, 0);
+      assert.equal(good.broadcasts.length, 1);
+    } finally {
+      await good.close();
+    }
+  }
+);
+
+test(
+  'first RPC times out: the request moves on to the second',
+  TIMEOUT,
+  async () => {
+    const hanging = await startNode({ version: V32_COMET, fail: () => 'hang' });
+    const good = await startNode({ version: V32_COMET });
+    try {
+      const client = new FailoverRpcClient([hanging.url, good.url], 200);
+      const response = await client.execute({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'status',
+        params: {},
+      });
+      assert.equal(response.result.node_info.version, V32_COMET);
+      assert.equal(client.url, good.url);
+      client.disconnect();
+    } finally {
+      await hanging.close();
+      await good.close();
+    }
+  }
+);
+
+test(
+  'a JSON-RPC error from a node that answered is not retried elsewhere',
+  TIMEOUT,
+  async () => {
+    const first = await startNode({ version: V32_COMET });
+    const second = await startNode({ version: V32_COMET });
+    try {
+      const client = new FailoverRpcClient([first.url, second.url]);
+      await assert.rejects(
+        client.execute({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'genesis',
+          params: {},
+        }),
+        /Internal error/
+      );
+      assert.deepEqual(first.requests, ['genesis']);
+      assert.deepEqual(second.requests, []);
+    } finally {
+      await first.close();
+      await second.close();
+    }
+  }
+);
+
+test(
+  'every RPC failing: the last error is reported after one retry',
+  TIMEOUT,
+  async () => {
+    const a = await startNode({ version: V32_COMET, fail: () => 503 });
+    const b = await startNode({ version: V32_COMET, fail: () => 502 });
+    try {
+      await assert.rejects(
+        connectStargateSigningClient(
+          [a.url, b.url],
+          (await wallets()).direct,
+          gasPrice
+        ),
+        {
+          message: 'Bad status on response: 503',
+        }
+      );
+      // a, b, then a again.
+      assert.deepEqual(a.requests, ['status', 'status']);
+      assert.deepEqual(b.requests, ['status']);
+    } finally {
+      await a.close();
+      await b.close();
+    }
+  }
+);
+
+test('a single RPC gets one retry', TIMEOUT, async () => {
+  let calls = 0;
+  const flaky = await startNode({
+    version: V32_COMET,
+    fail: () => (calls++ === 0 ? 502 : undefined),
+  });
+  try {
+    const client = new FailoverRpcClient([flaky.url]);
+    const response = await client.execute({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'status',
+      params: {},
+    });
+    assert.equal(response.result.node_info.version, V32_COMET);
+    assert.deepEqual(flaky.requests, ['status', 'status']);
+  } finally {
+    await flaky.close();
+  }
+});
+
+// --- Broadcast retries -------------------------------------------------------
+//
+// A broadcast that fails without an answer (a 502 or a timeout from a proxy)
+// may have reached the node. The copy sent to the next RPC can then be
+// rejected because the network already has the tx; the client must go on to
+// look the tx up instead of failing it.
+
+const DUPLICATE_IN_CACHE = {
+  error: {
+    code: -32603,
+    message: 'Internal error',
+    data: 'tx already exists in cache',
+  },
+};
+
+function rejected(code, codespace = 'sdk') {
+  return {
+    result: { code, data: '', log: 'rejected', codespace, hash: txHash() },
+  };
+}
+
+function hashOf(bytes) {
+  return createHash('sha256').update(bytes).digest('hex').toUpperCase();
+}
+
+const SOME_TX = new Uint8Array([1, 2, 3, 4]);
+
+function broadcastRequest() {
+  return {
+    jsonrpc: '2.0',
+    id: 7,
+    method: 'broadcast_tx_sync',
+    params: { tx: toBase64(SOME_TX) },
+  };
+}
+
+test(
+  'broadcast 502s, the retry finds the tx in the mempool cache: the send waits for the tx',
+  TIMEOUT,
+  async () => {
+    const { direct: signer } = await wallets();
+    const [{ address }] = await signer.getAccounts();
+    const node = (fail) =>
+      startNode({
+        version: V32_COMET,
+        address,
+        accountNumber: BIG_ACCOUNT_NUMBER,
+        fail,
+      });
+    const first = await node((method) =>
+      method === 'broadcast_tx_sync' ? 502 : undefined
+    );
+    const second = await node((method) =>
+      method === 'broadcast_tx_sync' ? DUPLICATE_IN_CACHE : undefined
+    );
+    try {
+      const response = await sendVia([first.url, second.url], signer, address);
+      assert.equal(response.code, 0);
+      // Both nodes got the same signed tx; the hash is that tx's.
+      assert.deepEqual(first.broadcasts, second.broadcasts);
+      assert.equal(response.transactionHash, hashOf(first.broadcasts[0]));
+      assert.deepEqual(second.requests, ['broadcast_tx_sync', 'tx_search']);
+    } finally {
+      await first.close();
+      await second.close();
+    }
+  }
+);
+
+for (const code of [19, 32]) {
+  test(
+    `broadcast 502s, the retry is rejected with sdk ${code}: answered with the tx hash`,
+    TIMEOUT,
+    async () => {
+      const first = await startNode({ version: V32_COMET, fail: () => 502 });
+      const second = await startNode({
+        version: V32_COMET,
+        fail: () => rejected(code),
+      });
+      try {
+        const client = new FailoverRpcClient([first.url, second.url]);
+        const response = await client.execute(broadcastRequest());
+        assert.deepEqual(response, {
+          jsonrpc: '2.0',
+          id: 7,
+          result: {
+            code: 0,
+            data: '',
+            log: '',
+            codespace: '',
+            hash: hashOf(SOME_TX),
+          },
+        });
+        assert.equal(client.url, second.url);
+      } finally {
+        await first.close();
+        await second.close();
+      }
+    }
+  );
+}
+
+test(
+  'broadcast 502s, the retry is accepted: its own answer is returned',
+  TIMEOUT,
+  async () => {
+    const first = await startNode({ version: V32_COMET, fail: () => 502 });
+    const second = await startNode({ version: V32_COMET });
+    try {
+      const client = new FailoverRpcClient([first.url, second.url]);
+      const response = await client.execute(broadcastRequest());
+      assert.equal(response.result.code, 0);
+      assert.equal(response.result.hash, txHash());
+    } finally {
+      await first.close();
+      await second.close();
+    }
+  }
+);
+
+test(
+  'broadcast 502s, the retry is rejected for another reason: the rejection stands',
+  TIMEOUT,
+  async () => {
+    const first = await startNode({ version: V32_COMET, fail: () => 502 });
+    const second = await startNode({
+      version: V32_COMET,
+      fail: () => rejected(5),
+    });
+    const third = await startNode({
+      version: V32_COMET,
+      fail: () => ({
+        error: {
+          code: -32603,
+          message: 'Internal error',
+          data: 'mempool is full',
+        },
+      }),
+    });
+    try {
+      const client = new FailoverRpcClient([first.url, second.url]);
+      const response = await client.execute(broadcastRequest());
+      assert.equal(response.result.code, 5);
+      assert.equal(response.result.log, 'rejected');
+      await assert.rejects(
+        new FailoverRpcClient([first.url, third.url]).execute(
+          broadcastRequest()
+        ),
+        /mempool is full/
+      );
+    } finally {
+      await first.close();
+      await second.close();
+      await third.close();
+    }
+  }
+);
+
+test(
+  'a duplicate rejection on the first attempt is not reinterpreted',
+  TIMEOUT,
+  async () => {
+    const sequence = await startNode({
+      version: V32_COMET,
+      fail: () => rejected(32),
+    });
+    const cached = await startNode({
+      version: V32_COMET,
+      fail: () => DUPLICATE_IN_CACHE,
+    });
+    try {
+      const response = await new FailoverRpcClient([sequence.url]).execute(
+        broadcastRequest()
+      );
+      assert.equal(response.result.code, 32);
+      await assert.rejects(
+        new FailoverRpcClient([cached.url]).execute(broadcastRequest()),
+        /tx already exists in cache/
+      );
+    } finally {
+      await sequence.close();
+      await cached.close();
+    }
+  }
+);
+
+test(
+  'a 502 on another method followed by a duplicate-looking answer is not a broadcast',
+  TIMEOUT,
+  async () => {
+    let calls = 0;
+    const node = await startNode({
+      version: V32_COMET,
+      fail: () => (calls++ === 0 ? 502 : rejected(32)),
+    });
+    try {
+      const response = await new FailoverRpcClient([node.url]).execute({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'abci_query',
+        params: {},
+      });
+      assert.equal(response.result.code, 32);
+    } finally {
+      await node.close();
+    }
+  }
+);
+
+test(
+  'broadcast failing on every RPC: the last error is reported',
+  TIMEOUT,
+  async () => {
+    const a = await startNode({ version: V32_COMET, fail: () => 502 });
+    const b = await startNode({ version: V32_COMET, fail: () => 503 });
+    try {
+      await assert.rejects(
+        new FailoverRpcClient([a.url, b.url]).execute(broadcastRequest()),
+        { message: 'Bad status on response: 502' }
+      );
+      assert.equal(a.broadcasts.length, 2);
+      assert.equal(b.broadcasts.length, 1);
+    } finally {
+      await a.close();
+      await b.close();
+    }
+  }
+);
+
+test('which broadcast rejections mean the tx is already known', () => {
+  assert.equal(
+    isTxAlreadyKnown(new Error(JSON.stringify(DUPLICATE_IN_CACHE.error))),
+    true
+  );
+  assert.equal(
+    isTxAlreadyKnown(new Error('Bad status on response: 502')),
+    false
+  );
+  assert.equal(isTxAlreadyKnown({ code: 19, codespace: 'sdk' }), true);
+  assert.equal(isTxAlreadyKnown({ code: 32, codespace: 'sdk' }), true);
+  assert.equal(isTxAlreadyKnown({ code: 5, codespace: 'sdk' }), false);
+  assert.equal(isTxAlreadyKnown({ code: 32, codespace: 'wasm' }), false);
+  assert.equal(isTxAlreadyKnown({ code: 0, codespace: '' }), false);
+});
+
+test('no RPC configured', () => {
+  assert.throws(() => new FailoverRpcClient([]), {
+    message: 'RPC endpoint is unavailable',
+  });
+});
+
+test('which errors move on to the next RPC', () => {
+  const status = (code) =>
+    new Error(`Bad status on response: ${code}`, {
+      cause: { status: code, body: '' },
+    });
+  assert.equal(isRetryableRpcError(status(502)), true);
+  assert.equal(isRetryableRpcError(status(500)), true);
+  assert.equal(isRetryableRpcError(status(429)), true);
+  assert.equal(isRetryableRpcError(status(404)), false);
+  assert.equal(isRetryableRpcError(new TypeError('fetch failed')), true);
+  assert.equal(
+    isRetryableRpcError(new SyntaxError('Unexpected token <')),
+    true
+  );
+  assert.equal(
+    isRetryableRpcError(new DOMException('timed out', 'TimeoutError')),
+    true
+  );
+  assert.equal(
+    isRetryableRpcError(new DOMException('aborted', 'AbortError')),
+    true
+  );
+  assert.equal(
+    isRetryableRpcError(
+      new Error('{"code":-32603,"message":"Internal error"}')
+    ),
+    false
+  );
+  assert.equal(isRetryableRpcError(new Error('no cause')), false);
+  assert.equal(isRetryableRpcError('not an error'), false);
+});
+
+test('adaptor follows the reported CometBFT version', TIMEOUT, async () => {
+  for (const [version, check] of [
+    [V31_COMET, isComet38Client],
+    ['1.0.0', isComet1Client],
+  ]) {
+    const node = await startNode({ version });
+    try {
+      assert.equal(
+        check(await connectFailoverComet([node.url])),
+        true,
+        version
+      );
+    } finally {
+      await node.close();
+    }
+  }
+});
+
+// --- Fees ---------------------------------------------------------------------
+
+test('estimateFee: simulated gas x1.4 plus a fixed margin, at the gas price', async () => {
+  const seen = [];
+  const client = {
+    simulate: async (...args) => {
+      seen.push(args);
+      return 51053; // a MsgSend on xion v32 testnet; delivery used 74,718
+    },
+  };
+  const msgs = [{ typeUrl: '/cosmos.bank.v1beta1.MsgSend', value: {} }];
+  const fee = await estimateFee(client, 'xion1sender', msgs, 'memo', gasPrice);
+  const gas = Math.ceil(51053 * GAS_MULTIPLIER) + GAS_MARGIN;
+  assert.equal(fee.gas, String(gas));
+  assert.ok(gas > 74718, 'covers what delivery used');
+  assert.deepEqual(fee.amount, [
+    { denom: 'uxion', amount: String(Math.ceil(gas * 0.001)) },
+  ]);
+  assert.deepEqual(seen, [['xion1sender', msgs, 'memo']]);
 });

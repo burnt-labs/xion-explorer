@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { coin, GasPrice } from '@cosmjs/stargate';
+import { coin, GasPrice, type StdFee } from '@cosmjs/stargate';
+import type { EncodeObject } from '@cosmjs/proto-signing';
 import { fromBech32, toUtf8 } from '@cosmjs/encoding';
 import { useBlockchain } from '@/stores';
 import { useWalletStore } from '@/stores/verona/useWalletStore';
@@ -8,6 +9,7 @@ import { getAbstraxionSigningClient } from '@/services/abstraxion';
 import {
   connectCosmWasmSigningClient,
   connectStargateSigningClient,
+  estimateFee,
   walletSigner,
   type WalletProvider,
 } from '@/libs/wallet-signing';
@@ -263,38 +265,44 @@ async function submit() {
   error.value = '';
   result.value = '';
   try {
-    const rpc = chain.current?.endpoints?.rpc?.[0]?.address;
-    if (!rpc) throw new Error('RPC endpoint is unavailable');
+    // Every configured RPC, in order: the first is preferred, the rest are
+    // fallbacks when it fails (see FailoverRpcClient).
+    const rpcs = (chain.current?.endpoints?.rpc || []).map((x) => x.address).filter(Boolean);
+    if (!rpcs.length) throw new Error('RPC endpoint is unavailable');
     const sender = props.sender || wallet.currentAddress;
     if (!sender) throw new Error('Connect a wallet first');
     const isAbstractAccount = wallet.connectedWallet?.connectionType === 'oauth';
     const abstractClient = isAbstractAccount ? await getAbstraxionSigningClient() : undefined;
     const offlineSigner = isAbstractAccount ? undefined : await signer();
     const gasPrice = GasPrice.fromString(`0.001${assets.value[0]?.base || 'uxion'}`);
-    const fee = advanced.value
+    const funds = () => coin(baseAmount(), denom.value);
+    let messages: EncodeObject[];
+    if (isWasmExecute.value) messages = [{ typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract', value: { sender, contract: contract.value, msg: toUtf8(message.value), funds: [] } }];
+    else if (props.type === 'send') messages = [{ typeUrl: '/cosmos.bank.v1beta1.MsgSend', value: { fromAddress: sender, toAddress: recipient.value, amount: [funds()] } }];
+    else if (props.type === 'delegate') messages = [{ typeUrl: '/cosmos.staking.v1beta1.MsgDelegate', value: { delegatorAddress: sender, validatorAddress: validator.value, amount: funds() } }];
+    else if (props.type === 'unbond') messages = [{ typeUrl: '/cosmos.staking.v1beta1.MsgUndelegate', value: { delegatorAddress: sender, validatorAddress: validator.value, amount: funds() } }];
+    else if (props.type === 'redelegate') messages = [{ typeUrl: '/cosmos.staking.v1beta1.MsgBeginRedelegate', value: { delegatorAddress: sender, validatorSrcAddress: validator.value, validatorDstAddress: destinationValidator.value, amount: funds() } }];
+    else if (props.type === 'withdraw') {
+      const validators = validator.value ? [validator.value] : wallet.rewards.rewards.map((reward) => reward.validator_address);
+      messages = validators.map((address) => ({ typeUrl: '/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward', value: { delegatorAddress: sender, validatorAddress: address } }));
+    } else if (props.type === 'withdraw_commission') messages = [{ typeUrl: '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission', value: { validatorAddress: validator.value } }];
+    else if (props.type === 'vote') messages = [{ typeUrl: '/cosmos.gov.v1beta1.MsgVote', value: { proposalId: BigInt(params.value.proposal_id), voter: sender, option: voteOption.value } }];
+    else if (props.type === 'deposit') messages = [{ typeUrl: '/cosmos.gov.v1beta1.MsgDeposit', value: { proposalId: BigInt(params.value.proposal_id), depositor: sender, amount: [funds()] } }];
+    else throw new Error(`${title.value} is not implemented in the native transaction dialog`);
+    const customFee: StdFee | undefined = advanced.value
       ? { amount: [coin(feeAmount.value, assets.value[0]?.base || 'uxion')], gas: gas.value }
-      : 'auto';
+      : undefined;
     let response;
-    if (isWasmExecute.value) {
-      const client = abstractClient || await connectCosmWasmSigningClient(rpc, offlineSigner!, gasPrice);
-      response = await client.signAndBroadcast(sender, [{
-        typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',
-        value: { sender, contract: contract.value, msg: toUtf8(message.value), funds: [] },
-      }], fee, memo.value);
+    if (abstractClient) {
+      // xion.js applies its own gas margin and the treasury fee grant.
+      response = await abstractClient.signAndBroadcast(sender, messages, customFee || 'auto', memo.value);
     } else {
-      const client = abstractClient || await connectStargateSigningClient(rpc, offlineSigner!, gasPrice);
-      const funds = () => coin(baseAmount(), denom.value);
-      if (props.type === 'send') response = await client.sendTokens(sender, recipient.value, [funds()], fee, memo.value);
-      else if (props.type === 'delegate') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.staking.v1beta1.MsgDelegate', value: { delegatorAddress: sender, validatorAddress: validator.value, amount: funds() } }], fee, memo.value);
-      else if (props.type === 'unbond') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.staking.v1beta1.MsgUndelegate', value: { delegatorAddress: sender, validatorAddress: validator.value, amount: funds() } }], 'auto', memo.value);
-      else if (props.type === 'redelegate') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.staking.v1beta1.MsgBeginRedelegate', value: { delegatorAddress: sender, validatorSrcAddress: validator.value, validatorDstAddress: destinationValidator.value, amount: funds() } }], 'auto', memo.value);
-      else if (props.type === 'withdraw') {
-        const validators = validator.value ? [validator.value] : wallet.rewards.rewards.map((reward) => reward.validator_address);
-        response = await client.signAndBroadcast(sender, validators.map((address) => ({ typeUrl: '/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward', value: { delegatorAddress: sender, validatorAddress: address } })), 'auto', memo.value);
-      } else if (props.type === 'withdraw_commission') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission', value: { validatorAddress: validator.value } }], 'auto', memo.value);
-      else if (props.type === 'vote') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.gov.v1beta1.MsgVote', value: { proposalId: BigInt(params.value.proposal_id), voter: sender, option: voteOption.value } }], 'auto', memo.value);
-      else if (props.type === 'deposit') response = await client.signAndBroadcast(sender, [{ typeUrl: '/cosmos.gov.v1beta1.MsgDeposit', value: { proposalId: BigInt(params.value.proposal_id), depositor: sender, amount: [funds()] } }], 'auto', memo.value);
-      else throw new Error(`${title.value} is not implemented in the native transaction dialog`);
+      const client = isWasmExecute.value
+        ? await connectCosmWasmSigningClient(rpcs, offlineSigner!, gasPrice)
+        : await connectStargateSigningClient(rpcs, offlineSigner!, gasPrice);
+      // Not CosmJS `auto` (simulated x1.4): too little for small txs on xion.
+      const fee = customFee || await estimateFee(client, sender, messages, memo.value, gasPrice);
+      response = await client.signAndBroadcast(sender, messages, fee, memo.value);
     }
     if (!response) return;
     if ('code' in response && response.code !== 0) throw new Error(response.rawLog || `Transaction failed with code ${response.code}`);
