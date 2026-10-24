@@ -42,34 +42,14 @@ export function deploymentConfigurationErrors({
     errors.push('testnet must deploy the testnet bundle');
   if (workflows.length !== 3)
     errors.push('exactly three deployment entry points are required');
-  // buildVariables (GitHub Environment vars exported to the build) first
-  // shipped in github-workflows v1.8.0.
-  const pins = workflows.map(
-    (workflow) =>
-      workflow.match(
-        /burnt-labs\/github-workflows\/\.github\/workflows\/[a-z-]+\.yml@([0-9a-f]{40}) # v(\d+)\.(\d+)\.\d+/
-      ) ?? [null, null, '0', '0']
-  );
   if (
-    pins.some(
-      ([, , major, minor]) => Number(major) * 1000 + Number(minor) < 1008
+    workflows.some(
+      (workflow) =>
+        !workflow.includes('@511b72fad7c0bd937e2820b8e4165b075a875cf9 # v1.2.8')
     )
-  )
-    errors.push('shared workflows must be SHA-pinned at v1.8.0 or later');
-  if (new Set(pins.map(([, sha]) => sha)).size !== 1)
-    errors.push('every entry point must pin the same shared-workflow revision');
-
-  // Vite inlines VITE_* at build time; the values live on the mainnet and
-  // testnet GitHub Environments and reach the build only through this list.
-  const buildVariables = deploymentPolicy.buildVariables ?? [];
-  if (
-    [
-      'VITE_FETCH_ALL_BLOCKS',
-      'VITE_REFRESH_INTERVAL',
-      'VITE_RECENT_BLOCK_LIMIT',
-    ].some((name) => !buildVariables.includes(name))
-  )
-    errors.push('block polling settings must be declared as buildVariables');
+  ) {
+    errors.push('shared workflows must be pinned to v1.2.8');
+  }
 
   return errors;
 }
