@@ -5,10 +5,17 @@ import dayjs from 'dayjs';
 import type { Block } from '@/types';
 import { hashTx } from '@/libs';
 import { fromBase64 } from '@cosmjs/encoding';
+import { blockHeight, mapWithConcurrency, mergeRecentBlocks, missingHeights, withTimeout } from '@/libs/recent-blocks';
 
 // `"false"` is a truthy string, so compare explicitly.
 const FETCH_ALL_BLOCKS = import.meta.env.VITE_FETCH_ALL_BLOCKS === 'true';
 const RECENT_BLOCKS_LIMIT = Number(import.meta.env.VITE_RECENT_BLOCK_LIMIT) || 50;
+// Parallel block requests while backfilling the window.
+const BACKFILL_CONCURRENCY = 6;
+// Give up on one block request after this long; the height is retried next poll.
+const BACKFILL_FETCH_TIMEOUT_MS = 10_000;
+// Set while a backfill is in flight; polls that overlap it only add latest.
+let backfilling = false;
 type Theme = 'light' | 'dark';
 const DEFAULT_THEME: Theme = import.meta.env.VITE_DEFAULT_THEME === 'dark' ? 'dark' : 'light';
 
@@ -114,34 +121,41 @@ export const useBaseStore = defineStore('baseStore', {
         this.earliest = this.latest;
         this.recents = [];
       }
-      //check if the block exists in recents
-      if (this.recents.findIndex((x) => x?.block_id?.hash === this.latest?.block_id?.hash) === -1) {
+      // With backfill on, every poll checks the window for holes (including
+      // heights that failed to load last time), even when latest is unchanged.
+      const latestKnown = this.recents.some((x) => x?.block_id?.hash === this.latest?.block_id?.hash);
+      if (FETCH_ALL_BLOCKS || !latestKnown) {
         const newBlocks = await this.fetchNewBlocks();
-        const combined = [...this.recents, ...newBlocks];
-        this.recents = combined.slice(-RECENT_BLOCKS_LIMIT);
+        this.recents = mergeRecentBlocks(this.recents, newBlocks, RECENT_BLOCKS_LIMIT);
       }
       return this.latest;
     },
     /**
-     * Fetches all blocks since the last block in recents.
-     * Only fetches blocks with height greater than this.recents[-1].block.header.height.
-     * Returns an array of new blocks to be added to recents.
+     * Returns the blocks to merge into recents: the latest block, plus, when
+     * backfill is on, every height of the display window that recents lacks.
+     * Only the window is fetched, so a long background period costs at most
+     * RECENT_BLOCKS_LIMIT requests, and only one backfill runs at a time so
+     * overlapping polls do not fetch the same heights.
      */
     async fetchNewBlocks() {
       if (!this.latest?.block?.header?.height) return [];
-      if (!FETCH_ALL_BLOCKS) return [this.latest];
-      const oldHeight = Number(this.recents[this.recents.length - 1]?.block?.header?.height);
-      const newHeight = Number(this.latest.block.header.height);
-      let newBlocks = [];
-      // Fetch all blocks between oldHeight+1 and less than newHeight
-      for (let h = oldHeight + 1; h < newHeight; h++) {
-        const block = await this.fetchBlock(h);
-        if (!block?.block?.header?.height) continue; // skip if block not found
-        newBlocks.push(block);
+      const latest = this.latest;
+      if (!FETCH_ALL_BLOCKS || backfilling) return [latest];
+      backfilling = true;
+      try {
+        const heights = missingHeights(this.recents, blockHeight(latest), RECENT_BLOCKS_LIMIT);
+        // The REST client has no request timeout, so bound each fetch: a
+        // stalled request would otherwise keep `backfilling` set, and later
+        // polls (even after endpoint failover) would stop filling holes.
+        const fetched = await mapWithConcurrency(heights, BACKFILL_CONCURRENCY, (h) =>
+          withTimeout(this.fetchBlock(h), BACKFILL_FETCH_TIMEOUT_MS, {} as Block)
+        );
+        // A failed or timed-out fetch has no header; leaving it out keeps the
+        // height missing, so the next poll retries it.
+        return [...fetched.filter((b) => b?.block?.header?.height), latest];
+      } finally {
+        backfilling = false;
       }
-      // Add the latest block
-      newBlocks.push(this.latest);
-      return newBlocks;
     },
     async fetchValidatorByHeight(height?: number, offset = 0) {
       return this.blockchain.rpc.getBaseValidatorsetAt(String(height), offset);

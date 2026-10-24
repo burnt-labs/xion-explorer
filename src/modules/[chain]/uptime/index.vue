@@ -152,8 +152,8 @@ onMounted(async () => {
     );
   }
 
-  // fill the recent blocks
-  baseStore.recents?.forEach((b) => {
+  // fill the recent blocks; the bars hold 50, and recents can hold more
+  baseStore.recents?.slice(-50).forEach((b) => {
     fillblock(b, 'start');
   });
 

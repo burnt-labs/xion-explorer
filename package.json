@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "format": "prettier --write .",
-    "format:check": "prettier --check .github/deployment-policy.jsonc .github/quality-policy.jsonc .github/workflows/pull-request.yml .github/workflows/push-main.yml .github/workflows/release.yml scripts/deployment-policy.mjs tests/deployment-policy.test.mjs tests/wallet-signing.test.mjs src/libs/wallet-signing.ts package.json wrangler.jsonc",
+    "format:check": "prettier --check .github/deployment-policy.jsonc .github/quality-policy.jsonc .github/workflows/pull-request.yml .github/workflows/push-main.yml .github/workflows/release.yml scripts/deployment-policy.mjs tests/deployment-policy.test.mjs tests/wallet-signing.test.mjs tests/recent-blocks.test.mjs src/libs/wallet-signing.ts src/libs/recent-blocks.ts package.json wrangler.jsonc",
     "lint": "node --check scripts/deployment-policy.mjs",
     "serve": "vite",
     "build": "run-p type-check build-only",
