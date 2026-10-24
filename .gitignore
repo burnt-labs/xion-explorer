@@ -23,9 +23,6 @@ coverage
 # environment files
 .env*
 !.env.example
-# Per-network build settings: committed, non-secret (see the files).
-!.env.mainnet
-!.env.testnet
 .dev.vars*
 *.local
 

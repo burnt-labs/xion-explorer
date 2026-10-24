@@ -9,6 +9,19 @@
   // Automatic promotion deploys mainnet in the same run, so a separate
   // publicly reachable mainnet preview would only duplicate the build.
   "previewReleaseOnMain": false,
+  // Build-time settings. Vite inlines VITE_* when it builds, so the values on
+  // the mainnet and testnet GitHub Environments reach the bundle only through
+  // this list. Each name must be set on both Environments or the build fails.
+  // Not secrets: every one of them ships to the browser.
+  "buildVariables": [
+    "VITE_REFRESH_INTERVAL",
+    "VITE_FETCH_ALL_BLOCKS",
+    "VITE_RECENT_BLOCK_LIMIT",
+    "VITE_COINGECKO_URL",
+    "VITE_GITHUB_API_URL",
+    "VITE_PINGPUB_API_URL",
+    "VITE_IBC_USE_GITHUB_API",
+  ],
   "targets": {
     "candidate": {
       "wranglerEnv": "testnet",
